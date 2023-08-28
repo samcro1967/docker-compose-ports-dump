@@ -1,0 +1,40 @@
+Release Notes - docker-compose-ports-dump
+
+Version: 1.1.0
+Release Date: September 1st, 2023
+
+Highlights
+	1: Docker Inspect
+	2: Docker PS
+	3: Docker Stats
+
+New Features
+	1: Added docker inspect to capture running config and added a view of it to the web page.
+	2: Added docker ps to capture running containers and added a view of it to the web page.
+	3: Added docker stats to capture containers utilization metrics for troubleshoting and
+	   added a view of it to the web page.
+
+Improvements
+	1: Grouped tasks in bootstrap.sh and reorered so the web page is built before caddy starts.
+	2: Changed API port as to not require elevated privileges
+	3: Separated Java functions and eventlisteners into separate files based on functionality 
+	   for better long term management
+	4: Made API port user configureable
+	5: Added Trivy and Codeql security vulnerability scanning to build pipeline and remeadited
+	6: Scanned code with pylint and updated code accordingly
+	7: Leveraged cProfile and snakeviz to reduce execution time by over 50%
+
+
+Bug Fixes
+	1. Fixed logic for pip module to package name in the debug module
+
+Breaking Changes
+	1. None for this release
+
+Deprecated Features (if any)
+	1. None for this release
+
+Known Issues
+	1. Global search and column filters - Searching external and internal port for 80 will
+       return 80 and 7801 as expected.  However, it will also return 8405.
+	2.  Does not work behind an https proxy

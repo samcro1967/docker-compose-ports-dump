@@ -1,9 +1,34 @@
-# dcpd_markdown.py
+"""
+dcpd_markdown.py
+----------------
 
+A utility script to convert a local README.md file into an HTML file (`README.html`),
+with added anchors to `h1` headers.
+
+The script makes use of the `markdown_it` library to tokenize and render markdown content.
+It also integrates logging functionalities via `dcpd_log_info` and `dcpd_log_debug`
+modules to ensure that the conversion process is traceable.
+
+Modules:
+    os: For standard operating system interactions like fetching paths.
+    markdown_it: A python markdown parser.
+    dcpd_log_debug & dcpd_log_info: Custom logging modules.
+
+Functions:
+    - generate_html_with_anchors(args):
+        Reads the README.md, processes it by adding anchors to `h1` headers, and then
+        writes the converted content to README.html. It handles common exceptions like
+        file not found and I/O errors.
+
+    - process_content(markdown_text, args):
+        Takes in markdown content and processes it by adding anchors to `h1` headers.
+        It tokenizes the provided markdown and appends anchor tokens to the list of
+        tokens, which is then rendered to HTML.
+"""
+
+import os
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
-import os
-import argparse
 import dcpd_log_debug
 import dcpd_log_info
 
@@ -23,12 +48,12 @@ def generate_html_with_anchors(args):
     - Always logs function entry, exit, and important steps to the info log file.
     - Outputs to the console when 'args.verbose' is set to True.
     """
-    
+
     entry_msg = "Starting the conversion of README.md to README.html."
     logger_info.info(entry_msg)
     if args.verbose:
         print(entry_msg)
-    
+
     # Paths
     current_dir = os.path.dirname(os.path.realpath(__file__))
     md_file_path = os.path.join(current_dir, "..", "README.md")
@@ -36,26 +61,45 @@ def generate_html_with_anchors(args):
 
     try:
         # Read the original markdown content
-        with open(md_file_path, "r") as f:
-            original_md = f.read()
-        
+        with open(md_file_path, "r", encoding='utf-8') as out_file:
+            original_md = out_file.read()
+
         # Process the content to generate HTML with anchors
         updated_html = process_content(original_md, args)
 
         # Save the generated HTML to the output file
-        with open(output_html_path, "w") as f:
-            f.write(updated_html)
+        with open(output_html_path, "w", encoding='utf-8') as out_file:
+            out_file.write(updated_html)
 
         success_msg = "Conversion successful."
         logger_info.info(success_msg)
         if args.verbose:
             print(success_msg)
-    except Exception as e:
-        error_msg = f"Error during conversion: {str(e)}"
+
+    except FileNotFoundError:
+        error_msg = f"File not found: {md_file_path}"
         logger_info.error(error_msg)
         if args.verbose:
             print(error_msg)
-    
+
+    except IOError:
+        error_msg = "I/O error occurred while reading or writing the file."
+        logger_info.error(error_msg)
+        if args.verbose:
+            print(error_msg)
+
+    except KeyError:
+        error_msg = "A KeyError occurred. Check your dictionary operations."
+        logger_info.error(error_msg)
+        if args.verbose:
+            print(error_msg)
+
+    except ValueError:
+        error_msg = "A ValueError occurred. Check the data you're working with."
+        logger_info.error(error_msg)
+        if args.verbose:
+            print(error_msg)
+
     exit_msg = "Exiting the conversion of README.md to README.html."
     logger_info.info(exit_msg)
     if args.verbose:
@@ -77,17 +121,17 @@ def process_content(markdown_text, args):
     - Logs tokenization and important processing steps to the debug log file.
     - Outputs to the console when 'args.verbose' is set to True.
     """
-    
+
     entry_msg = "Starting the tokenization and processing of the provided markdown content."
     logger_info.info(entry_msg)
     if args.verbose:
         print(entry_msg)
-    
+
     # Initialize the markdown parser
-    md = MarkdownIt()
+    mark_down = MarkdownIt()
 
     # Tokenize the markdown content
-    tokens = md.parse(markdown_text)
+    tokens = mark_down.parse(markdown_text)
     new_tokens = []
 
     for token in tokens:
@@ -109,6 +153,6 @@ def process_content(markdown_text, args):
     logger_debug.debug(finished_msg)
     if args.verbose:
         print(finished_msg)
-    
+
     # Convert the modified tokens to HTML
-    return md.renderer.render(new_tokens, md.options, {})
+    return mark_down.renderer.render(new_tokens, mark_down.options, {})

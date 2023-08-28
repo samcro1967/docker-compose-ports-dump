@@ -1,4 +1,5 @@
 colorama
+docker
 flasgger
 flask
 flask_caching

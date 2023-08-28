@@ -1,24 +1,32 @@
-# dcpd_host_networking.py
+"""
+dcpd_host_networking.py
 
-import sys
+This module provides functions to collect and process networking information for Docker services
+that have the 'network_mode' set to 'host' in a Docker Compose configuration file.
 
-# Add config to the sys path
-sys.path.append('../config')
+The module reads Docker Compose configuration files, extracts services with 'network_mode' set to 'host',
+and inserts these services into a database table. It also exports the data to a CSV file.
+"""
 
 # Import required modules
 import csv
 import os
-import pprint
 import sqlite3
 from sqlite3 import Cursor, Error
-from typing import Any, Dict, List, Tuple, Union
+import sys
 import yaml
 
-# Custom Modules imports
-import dcpd_config as dcpd_config
-import dcpd_log_debug as dcpd_log_debug
-import dcpd_log_info as dcpd_log_info
-import dcpd_utils as dcpd_utils
+# Add config to the sys path
+# pylint: disable=wrong-import-position
+sys.path.append('../config')
+
+# Third-party imports (if any)
+import dcpd_config
+
+# Custom module imports
+import dcpd_log_debug
+import dcpd_log_info
+import dcpd_utils
 
 # Create an alias for convenience
 logger_info = dcpd_log_info.logger
@@ -51,7 +59,6 @@ def host_networking(cursor: Cursor, args):
     - Always logs function entry, exit, and important steps to the info log file.
     - Outputs to the console when 'args.verbose' is set to True.
     """
-    
     entry_msg = "Starting the processing of host networking..."
     logger_info.info(entry_msg)
     if args.verbose:
@@ -60,34 +67,17 @@ def host_networking(cursor: Cursor, args):
     for file_path in default_docker_compose_file:
         # Read and parse the docker-compose file
         try:
-            with open(file_path, 'r') as file:
+            with open(file_path, 'r', encoding="utf-8") as file:
                 compose_content = yaml.safe_load(file)
-        except FileNotFoundError:
-            error_msg = f"File not found: {file_path}"
-            logger_info.error(error_msg)
-            if args.verbose:
-                print(error_msg)
-            raise
-        except yaml.YAMLError as exc:
-            error_msg = f"Error parsing YAML file {file_path}: {exc}"
-            logger_info.error(error_msg)
-            if args.verbose:
-                print(error_msg)
-            raise
 
-        try:
-            # Extract services with network_mode set to "host"
             services_with_host_networking = [
-                service_name for service_name, service_config in compose_content.get('services', {}).items() 
+                service_name for service_name, service_config in compose_content.get('services', {}).items()
                 if service_config.get('network_mode') == "host"
             ]
-            
-            # Sort the services alphabetically
-            services_with_host_networking.sort()
 
-            # Insert services into the database
-            for service_name in services_with_host_networking:
-                cursor.execute("INSERT INTO host_networking (service_name) VALUES (?)", (service_name,))
+            # Insert services into the database using batch inserts
+            cursor.executemany("INSERT INTO host_networking (service_name) VALUES (?)",
+                               [(service,) for service in services_with_host_networking])
 
             processed_services = []
 
@@ -95,19 +85,19 @@ def host_networking(cursor: Cursor, args):
                 process_host_mappings(cursor, service_name, service_config, args)
                 processed_services.append(service_name)
 
-            # Print to console if verbose
+            dcpd_utils.log_separator_debug(logger_debug)
+
             if args.verbose:
                 print(f"Processed host mappings for services: {', '.join(processed_services)}")
 
-            # Log to debug log
-            logger_debug.debug(f"Processed host mappings for services: {', '.join(processed_services)}")  
+            dcpd_utils.log_separator_debug(logger_debug)
+            logger_debug.debug("Processed host mappings for services: %s", ', '.join(processed_services))
+            dcpd_utils.log_separator_debug(logger_debug)
 
-            # Commit the changes to the database
             cursor.connection.commit()
 
-            # Logging
-            logger_info.info(f"Successfully inserted {len(services_with_host_networking)} service names into the host_networking table.")
-            logger_debug.debug(f"Services with host networking: {', '.join(services_with_host_networking)}")
+            logger_info.info("Successfully inserted %s service names into the host_networking table.", len(services_with_host_networking))
+            logger_debug.debug("Services with host networking: %s", ', '.join(services_with_host_networking))
 
         except Error as db_error:
             error_msg = f"Database error while inserting service names into the host_networking table: {db_error}"
@@ -129,7 +119,7 @@ def host_networking(cursor: Cursor, args):
 
         try:
             # Export the host_networking table to a CSV
-            export_host_networking_to_csv(cursor, args)  
+            export_host_networking_to_csv(cursor, args)
         except Exception as exc:
             error_msg = "Unexpected error while exporting host networking to CSV."
             logger_info.exception(error_msg)
@@ -156,7 +146,7 @@ def export_host_networking_to_csv(cursor: Cursor, args, output_file: str = outpu
     - Always logs function entry, exit, and important steps to the info log file.
     - Outputs to the console when 'args.verbose' is set to True.
     """
-    
+
     entry_msg = f"Starting the export of host_networking table to {output_file}."
     logger_info.info(entry_msg)
     if args.verbose:
@@ -174,16 +164,16 @@ def export_host_networking_to_csv(cursor: Cursor, args, output_file: str = outpu
             if args.verbose:
                 print(no_data_msg)
             return
-        
+
         # Extract column names (headers) from the cursor description
         headers = [column[0] for column in cursor.description]
 
         # Write data to the specified CSV file
         if args.verbose:
             print(f"Exporting data to CSV: {output_file}")
-        with open(output_file, 'w', newline='') as csv_file:
+        with open(output_file, 'w', newline='', encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file, lineterminator='\n')
-            
+
             # Write headers and rows to CSV
             csv_writer.writerow(headers)
             csv_writer.writerows(rows)
@@ -220,8 +210,8 @@ def export_host_networking_to_csv(cursor: Cursor, args, output_file: str = outpu
 # -------------------------------------------------------------------------
 def process_host_mappings(cursor: sqlite3.Cursor, service_name: str, service_config: dict, args):
     """
-    Processes 'host.mapping' values from the service configuration and inserts 
-    them into the 'service_info' table. The function will process all 'host.mapping' 
+    Processes 'host.mapping' values from the service configuration and inserts
+    them into the 'service_info' table. The function will process all 'host.mapping'
     values associated with the specified service.
 
     Args:
@@ -237,14 +227,14 @@ def process_host_mappings(cursor: sqlite3.Cursor, service_name: str, service_con
     - Always logs function entry, exit, and important steps to the info log file.
     - Outputs to the console when 'args.verbose' is set to True.
     """
-    
+
     entry_msg = f"Starting the processing of host mappings for service: {service_name}."
-    logger_info.info(entry_msg)
+    logger_debug.info(entry_msg)
     if args.verbose:
         print(entry_msg)
 
     environment_data = service_config.get('environment', [])
-    
+
     # Extract host.mapping values from the environment data
     host_mappings = [s.split('=')[1] for s in environment_data if s.startswith("host.mapping")]
 
@@ -254,19 +244,19 @@ def process_host_mappings(cursor: sqlite3.Cursor, service_name: str, service_con
                 # Inserting data into the database
                 cursor.execute(
                     """
-                    INSERT INTO service_info 
-                    (service_name, external_port, internal_port, has_port_mapping, mapped_app) 
+                    INSERT INTO service_info
+                    (service_name, external_port, internal_port, has_port_mapping, mapped_app)
                     VALUES (?, ?, ?, ?, ?)
-                    """, 
+                    """,
                     ("host", port_value, port_value, 1, service_name)
                 )
 
                 success_msg = f"Data for service: {service_name} with host.mapping={port_value} added to service_info table."
-                logger_info.info(success_msg)
+                logger_debug.info(success_msg)
                 if args.verbose:
                     print(success_msg)
 
-                logger_debug.debug(f"Service {service_name} host.mapping={port_value} processed.")
+                logger_debug.debug("Service %s host.mapping=%s processed.", service_name, port_value)
 
             except sqlite3.IntegrityError:
                 warning_msg = f"Duplicate entry for service: {service_name} with host.mapping={port_value}. Skipping."
@@ -274,15 +264,9 @@ def process_host_mappings(cursor: sqlite3.Cursor, service_name: str, service_con
                 if args.verbose:
                     print(warning_msg)
                 continue
-            except sqlite3.Error as e:
-                error_msg = f"DB error processing service: {service_name} with host.mapping={port_value}. Error: {e}"
+            except sqlite3.Error as error:
+                error_msg = f"DB error processing service: {service_name} with host.mapping={port_value}. Error: {error}"
                 logger_info.error(error_msg)
-                if args.verbose:
-                    print(error_msg)
-                continue
-            except Exception as e:
-                error_msg = f"Unexpected error processing service: {service_name}. Error: {e}"
-                logger_debug.exception(error_msg)
                 if args.verbose:
                     print(error_msg)
                 continue
@@ -291,6 +275,6 @@ def process_host_mappings(cursor: sqlite3.Cursor, service_name: str, service_con
     cursor.connection.commit()
 
     exit_msg = f"Finished processing of host mappings for service: {service_name}."
-    logger_info.info(exit_msg)
+    logger_debug.info(exit_msg)
     if args.verbose:
         print(exit_msg)

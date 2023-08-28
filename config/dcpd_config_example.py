@@ -9,7 +9,7 @@ DEFAULT_DOCKER_COMPOSE_FILE = [
 ]
 
 # Set the version
-VERSION = "v1.0.0"
+VERSION = "v1.1.0"
 
 # Replace with desired file name for the output html file
 DEFAULT_OUTPUT_HTML_FILE_NAME = "dcpd_output.html"
@@ -23,14 +23,20 @@ LINES_PER_PAGE = 0
 # Number of characters to print for log separator
 LOG_SEPARATOR_LENGTH = 55
 
-# Path to docker.db (relative to the folder where the script is being ran)
-DB_PATH = "docker.db"
-
-# Default background color for the report
+# Default background color for the web page
 DEFAULT_WEB_PAGE_BACKGROUND_COLOR = "scarlet"
+
+# Default accent color for the web page
+DEFAULT_WEB_PAGE_ACCENT_COLOR = "gray"
 
 # Default text color for the web page
 DEFAULT_WEB_PAGE_TEXT_COLOR = "white"
+
+# Default font name for the web page
+DEFAULT_WEB_PAGE_FONT_NAME = "roboto"
+
+# Default font sizze for the web page
+DEFAULT_WEB_PAGE_FONT_SIZE = "medium"
 
 WEB_COLOR_MAP = {
     "black": "#000000",
@@ -47,14 +53,92 @@ WEB_COLOR_MAP = {
     "cyan": "#00FFFF",
     "teal": "#008080",
     "orange": "#FFA500",
-    "purple": "#800080",
+    "purple": "#5C2D91",
     "lime": "#00FF00",
     "magenta": "#FF00FF",
     "navy": "#000080",
     "olive": "#808000",
+    "maroon": "#800000",
+    "green": "#008000",
+    "blue": "#0000FF",
+    "chocolate": "#D2691E",
+    "turquoise": "#40E0D0",
+    "silver": "#C0C0C0",
+    "royalblue": "#4169E1",
+    "coral": "#FF7F50",
+    "tomato": "#FF6347",
+    "goldenrod": "#DAA520",
+    "darkgreen": "#006400",
+    "plum": "#DDA0DD",
+    "tan": "#D2B48C",
+    "lightcoral": "#F08080",
+    "orchid": "#DA70D6",
+    "sienna": "#A0522D",
+    "beige": "#F5F5DC",
+    "indigo": "#4B0082",
+    "khaki": "#F0E68C",
+    "darkkhaki": "#BDB76B",
     "steelblue": "#4682B4",
     "scarlet": "#BB0000",
-    "grey": "#666666"
+    "gray": "#666666",
+    "gold": "#FFD700"
+}
+
+# Available font sizes for the web page
+FONT_SIZE_MAP = {
+    "tiny": "10px",
+    "small": "12px",
+    "normal": "14px",
+    "medium": "15px",
+    "large": "18px",
+    "extra_large": "20px",
+    "huge": "24px",
+    "gigantic": "28px"
+}
+
+# https://fonts.google.com/
+FONT_CHOICES = {
+    "default": "Arial, sans-serif",             # Web-safe font
+    "roboto": "'Roboto', sans-serif",           # Google Font
+    "lato": "'Lato', sans-serif",               # Google Font
+    "open_sans": "'Open Sans', sans-serif",     # Google Font
+    "merriweather": "'Merriweather', serif",    # Google Font
+    "raleway": "'Raleway', sans-serif",         # Google Font
+    "oswald": "'Oswald', sans-serif",           # Google Font
+    "josefin_sans": "'Josefin Sans', sans-serif", # Google Font
+    "playfair_display": "'Playfair Display', serif", # Google Font
+    "ubuntu": "'Ubuntu', sans-serif",           # Google Font
+    "muli": "'Muli', sans-serif",               # Google Font
+    "zcool_xiao_wei": "'ZCOOL XiaoWei', serif", # Google Font
+    "fjalla_one": "'Fjalla One', sans-serif",   # Google Font
+    "arvo": "'Arvo', serif",                    # Google Font
+    "poppins": "'Poppins', sans-serif",         # Google Font
+    "montserrat": "'Montserrat', sans-serif",   # Google Font
+    "pacifico": "'Pacifico', cursive",          # Google Font
+    "dancing_script": "'Dancing Script', cursive", # Google Font
+    "lobster": "'Lobster', cursive"              # Google Font
+}
+
+FONT_LINK_MAP = {
+    "default": None,  # Web-safe font does not require a link
+    "roboto": "https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap",
+    "lato": "https://fonts.googleapis.com/css2?family=Lato:wght@400&display=swap",
+    "open_sans": "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap",
+    "merriweather": "https://fonts.googleapis.com/css2?family=Merriweather:wght@400&display=swap",
+    "raleway": "https://fonts.googleapis.com/css2?family=Raleway:wght@400&display=swap",
+    "oswald": "https://fonts.googleapis.com/css2?family=Oswald:wght@400&display=swap",
+    "josefin_sans": "https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400&display=swap",
+    "playfair_display": "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=swap",
+    "ubuntu": "https://fonts.googleapis.com/css2?family=Ubuntu:wght@400&display=swap",
+    "muli": "https://fonts.googleapis.com/css2?family=Muli:wght@400&display=swap",
+    "zcool_xiao_wei": "https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei:wght@400&display=swap",
+    "fjalla_one": "https://fonts.googleapis.com/css2?family=Fjalla+One:wght@400&display=swap",
+    "arvo": "https://fonts.googleapis.com/css2?family=Arvo:wght@400&display=swap",
+    "poppins": "https://fonts.googleapis.com/css2?family=Poppins:wght@400&display=swap",
+    "montserrat": "https://fonts.googleapis.com/css2?family=Montserrat:wght@400&display=swap",
+    "pacifico": "https://fonts.googleapis.com/css2?family=Pacifico:wght@400&display=swap",
+    "dancing_script": "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400&display=swap",
+    "lobster": "https://fonts.googleapis.com/css2?family=Lobster:wght@400&display=swap"
 }
 
 # Colors ANSI escape code can be found here:
@@ -103,6 +187,9 @@ REDACTED_ZIP_FILE_PASSWORD = "P@55w0rd"
 
 # API KEY
 API_KEY = "123456789"
+
+# API Port
+API_PORT = 51763
 
 # Flask Cache Type
 CACHE_TYPE = 'simple'

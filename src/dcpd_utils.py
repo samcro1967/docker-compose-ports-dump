@@ -1,16 +1,24 @@
-# dcpd_utils.py
+"""
+dcpd_utils.py
 
+This script provides utility functions for interacting with the DCPD (Dynamic Configurable Port Detection) system.
+It includes functions for caching data, checking cache validity, fetching software versions, and paginating output.
+
+"""
+
+# pylint: disable=E0401,C0415,R0915, R0912, R0914, C0103, W0612, W0603
 import sys
 import os
+import platform
 
 # Add config to the sys path
-sys.path.append('../config')
+# pylint: disable=wrong-import-position
+sys.path.extend(['.', '../config'])
 
-import dcpd_config as dcpd_config
-import dcpd_log_info as dcpd_log_info
-import dcpd_log_debug as dcpd_log_debug
-import platform
-import pprint
+# Third-party imports (if any)
+import dcpd_config
+import dcpd_log_info
+import dcpd_log_debug
 
 # Using the variables from config.py
 default_docker_compose_file = dcpd_config.DEFAULT_DOCKER_COMPOSE_FILE
@@ -54,7 +62,7 @@ def set_permissions_and_ownership(args):
     Note:
         Verbose mode provides detailed console output for better user interaction.
     """
-    
+
     # Entry messages
     logger_info.info("Starting the permission and ownership modification process.")
     if args.verbose:
@@ -69,7 +77,8 @@ def set_permissions_and_ownership(args):
     log_separator_debug(logger_debug)
 
     # Logging the OS context can be beneficial for debugging platform-specific issues.
-    logger_info.info(f"Running on: {platform.platform()}")
+    logger_info.info("Running on: %s", platform.platform())
+
 
     try:
         for root, dirs, files in os.walk(parent_dir):
@@ -83,11 +92,11 @@ def set_permissions_and_ownership(args):
                 os.chmod(file_path, 0o777)
                 os.chown(file_path, 1000, 1000)
 
-    except Exception as e:
-        # Generic exception handling to cover unexpected errors.
-        logger_info.error(f"Encountered an unexpected error during permission and ownership modification: {str(e)}")
+    except OSError as os_error:
+        # Catch specific OS-related errors
+        logger_info.error("Encountered an OS-related error during permission and ownership modification: %s", str(os_error))
         if args.verbose:
-            print(f"Error encountered: {str(e)}")
+            print(f"OS-related error encountered: {str(os_error)}")
 
     # Exit messages
     logger_info.info("Permission and ownership modification finished.")
@@ -100,23 +109,23 @@ def set_permissions_and_ownership(args):
 def get_keypress() -> str:
     """
     Get single keypress on both Windows and UNIX systems.
-    
+
     Returns:
         str: Detected keypress in lowercase or 'ARROW_UP' if the up arrow key is pressed.
     """
     logger_info.info("Determining single keypress.")
 
     if IS_WINDOWS:
-        ch = msvcrt.getch().decode('utf-8')  # Use msvcrt for Windows
+        keypress = msvcrt.getch().decode('utf-8')  # Use msvcrt for Windows
     else:
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
+        file_descriptor = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(file_descriptor)
         try:
             if IS_UNIX:  # Only set raw mode on Unix-like systems
                 import tty
                 tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-            if ch == '\x1b':  # escape character, might be an arrow key
+            keypress = sys.stdin.read(1)
+            if keypress == '\x1b':  # escape character, might be an arrow key
                 next_char = sys.stdin.read(1)  # read the next character
                 if next_char == '[':  # checking for arrow key sequence
                     arrow_char = sys.stdin.read(1)
@@ -125,11 +134,10 @@ def get_keypress() -> str:
                         return 'ARROW_UP'
         finally:
             if IS_UNIX:  # Only restore terminal settings on Unix-like systems
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    
-    logger_info.info("Single keypress determined.")
-    return ch.lower()
+                termios.tcsetattr(file_descriptor, termios.TCSADRAIN, old_settings)
 
+    logger_info.info("Single keypress determined.")
+    return keypress.lower()
 
 # -------------------------------------------------------------------------
 def is_interactive_terminal():
@@ -139,14 +147,14 @@ def is_interactive_terminal():
     Returns:
         bool: True if the script is running in an interactive terminal, False otherwise.
     """
-    logger_info.info("Checking to see if the terminal is interactive.") 
+    logger_info.info("Checking to see if the terminal is interactive.")
     try:
         # Check if sys.stdin has the attribute isatty to determine if it's an interactive terminal
-        logger_info.info("Terminal is interactive.") 
+        logger_info.info("Terminal is interactive.")
         return sys.stdin.isatty()
     except AttributeError:
         # If the attribute is not present, it's not an interactive terminal
-        logger_info.info("Terminal is not interactive.") 
+        logger_info.info("Terminal is not interactive.")
         return False
 
 # -------------------------------------------------------------------------
@@ -185,7 +193,7 @@ def highlight_term(line: str, term: str) -> str:
     Returns:
         str: The line with the term highlighted.
     """
-    logger_info.info("Beginning to highlight lines in the terminal.") 
+    logger_info.info("Beginning to highlight lines in the terminal.")
 
     if not term:  # Check for None or empty terms
         return line
@@ -215,7 +223,7 @@ def highlight_term(line: str, term: str) -> str:
 def paginate_output(text: str):
     """
     Paginates the given text for interactive display in the terminal.
-    
+
     Args:
         text (str): The text to be paginated and displayed.
     """
@@ -238,7 +246,6 @@ def paginate_output(text: str):
     total_pages = (total_lines + lines_per_page - 1) // lines_per_page
     current_page = last_viewed_page  # Use the last viewed page as the starting page
     start_line = (current_page - 1) * lines_per_page
-    last_position = 0
 
     in_search_mode = False
     search_term = None
@@ -248,17 +255,17 @@ def paginate_output(text: str):
     def print_page(start: int, page_number: int):
         """
         Prints a page of lines starting from the specified index.
-        
+
         Args:
             start (int): The starting index of the lines to print.
             page_number (int): The current page number.
-        
+
         Returns:
             int: The ending index of the lines that were printed.
         """
         # Log the start of the print_page process
         logger_info.info("dcpd_utils.print_page started.")
-        
+
         # Clear the terminal screen to show the new page
         clear_terminal()
 
@@ -268,16 +275,16 @@ def paginate_output(text: str):
             print(custom_header)
             print("|     Service Name      |  External Port  |  Internal Port  |  Port Mapping  |  Mapped App   |")
             print("+=======================+=================+=================+================+===============+")
-            
+
         # Calculate the ending line index for the current page
         end = min(start + lines_per_page, total_lines)
-        
+
         # Extract the lines for the current page
         page_lines = lines[start:end]
-        
+
         # Print the lines for the current page
         print('\n'.join(page_lines))
-        
+
         # Return the index of the last line displayed on this page
         return end
     # -------------------------------------------------------------------------
@@ -378,7 +385,7 @@ def paginate_output(text: str):
                 print("\nJumped to the last page.\n")
             elif choice == 's':
                 term = input("Enter term to search for: ")
-                if term:  
+                if term:
                     search_term = term
                     search_positions = [i for i, line in enumerate(original_lines) if term.lower() in line.lower()]
                 if search_positions:
@@ -416,20 +423,10 @@ def paginate_output(text: str):
                 except ValueError:
                     print("Invalid lines-per-page setting. Using the previous setting.")
             elif choice == 'r':
-                try:
-                    # print(f"\n'r' option last_viewed_page at entry: {last_viewed_page}")
-                    # print(f"'r' option current_page at entry: {current_page}")
-                    # print(f"'r' option start_line at entry: {start_line}")
-                    current_page = last_viewed_page
-                    start_line = (current_page - 1) * lines_per_page
-                    print("\nReturned to the previously viewed page.\n")
-                    print(f"current_page: {current_page}")
-                    # print(f"'r' option last_viewed_page at exit: {last_viewed_page}")
-                    # print(f"'r' option current_page at exit: {current_page}")
-                    # print(f"'r' option start_line at exit: {start_line}")
-                    # break
-                except Exception as e:
-                    print(f"An error occurred in the 'r' option block: {e}")
+                current_page = last_viewed_page
+                start_line = (current_page - 1) * lines_per_page
+                print("\nReturned to the previously viewed page.\n")
+                print(f"current_page: {current_page}")
             elif choice == 'q':
                 break
             elif choice == '[':
@@ -465,68 +462,53 @@ def paginate_output(text: str):
 def log_separator_info(logger):
     """
     Log a separator line of "=" for visual separation in log files at INFO level.
-    
+
     Args:
         logger (logging.Logger): Logger object to which the separator should be logged.
     """
-    try:
-        # Create a separator line of "=" characters with the specified length
-        separator = "=" * log_separator_length
-        
-        # Log the separator line at the INFO level
-        logger.info(separator)
-        
-        # Log a debug message indicating that the INFO separator has been logged
-        logger_debug.debug("Logged INFO separator.")
-    except Exception as e:
-        # If an exception occurs during the logging process, log an error message and the exception trace
-        logger_info.error(f"Error occurred while logging INFO separator: {str(e)}")
-        logger_debug.exception("Exception trace:")
+    # Create a separator line of "=" characters with the specified length
+    separator = "=" * log_separator_length
+
+    # Log the separator line at the INFO level
+    logger.info(separator)
+
+    # Log a debug message indicating that the INFO separator has been logged
+    logger_debug.debug("Logged INFO separator.")
 
 # -------------------------------------------------------------------------
 def log_separator_debug(logger):
     """
     Log a separator line of "=" for visual separation in log files at DEBUG level.
-    
+
     Args:
         logger (logging.Logger): Logger object to which the separator should be logged.
     """
-    try:
-        # Create a separator line of "=" characters with the specified length
-        separator = "=" * log_separator_length
-        
-        # Log the separator line at the DEBUG level
-        logger.debug(separator)
-        
-        # Log a debug message indicating that the DEBUG separator has been logged
-        logger_debug.debug("Logged DEBUG separator.")
-    except Exception as e:
-        # If an exception occurs during the logging process, log an error message and the exception trace
-        logger_info.error(f"Error occurred while logging DEBUG separator: {str(e)}")
-        logger_debug.exception("Exception trace:")
+    # Create a separator line of "=" characters with the specified length
+    separator = "=" * log_separator_length
+
+    # Log the separator line at the DEBUG level
+    logger.debug(separator)
+
+    # Log a debug message indicating that the DEBUG separator has been logged
+    logger_debug.debug("Logged DEBUG separator.")
 
 
 # -------------------------------------------------------------------------
 def log_separator_data(logger):
     """
     Log a separator line of "-" for visual separation in log files, usually for data entries.
-    
+
     Args:
         logger (logging.Logger): Logger object to which the separator should be logged.
     """
-    try:
-        # Create a separator line of "-" characters with the specified length
-        separator = "-" * log_separator_length
-        
-        # Log the separator line at the DEBUG level
-        logger.debug(separator)
-        
-        # Log a debug message indicating that the data separator has been logged
-        logger_debug.debug("Logged data separator.")
-    except Exception as e:
-        # If an exception occurs during the logging process, log an error message and the exception trace
-        logger_info.error(f"Error occurred while logging data separator: {str(e)}")
-        logger_debug.exception("Exception trace:")
+    # Create a separator line of "-" characters with the specified length
+    separator = "-" * log_separator_length
+
+    # Log the separator line at the DEBUG level
+    logger.debug(separator)
+
+    # Log a debug message indicating that the data separator has been logged
+    logger_debug.debug("Logged data separator.")
 
 # -------------------------------------------------------------------------
 def clear_terminal():

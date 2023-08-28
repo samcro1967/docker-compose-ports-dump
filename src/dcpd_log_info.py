@@ -1,11 +1,43 @@
-# File: dcpd_log_info.py
+"""
+dcpd_log_info.py
+
+This module sets up and configures the information-level logger for the Docker Compose Ports Dump (DCPD) application.
+
+Attributes:
+    max_log_size (int): The maximum size of the log file before it undergoes rotation.
+    log_retention_count (int): The number of old log files to retain.
+    log_time_format (str): Format for time in log entries.
+    default_log_directory (str): Default directory to store log files.
+    console_logging_level (str): The logging level for console output.
+    logger (logging.Logger): Logger instance tailored for information-level logging in the DCPD application.
+    log_directory (str): Absolute path to the log directory.
+    log_file (str): Full path to the info log file.
+    file_handler (RotatingFileHandler): Rotating file handler set for log rotation based on file size.
+    console_handler (logging.StreamHandler): Console handler to output log messages to the terminal.
+
+Usage:
+    This module offers a `logger` instance tailored for information-level logging in the DCPD application. To make use of it, simply import the logger into your desired module.
+
+Example:
+    from dcpd_log_info import logger
+    logger.info("This is an informational message.")
+
+Note:
+    Before using this logger, ensure the settings in `dcpd_config` are appropriately configured.
+    The logger doesn't propagate messages to prevent potential duplication in log entries and offers an option to print messages to the console.
+"""
 
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+import sys
+
+# Add config to the sys path
+sys.path.append('../config')
 
 # Custom Modules imports
-import dcpd_config as dcpd_config
+# pylint: disable=wrong-import-position
+import dcpd_config
 
 # Create an alias for convenience
 max_log_size = dcpd_config.MAX_LOG_SIZE

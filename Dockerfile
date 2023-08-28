@@ -4,7 +4,7 @@ FROM lsiobase/alpine:3.18
 LABEL org.opencontainers.image.source https://github.com/samcro1967/docker-compose-ports-dump
 
 # Update & install required packages and set up Docker Compose V2
-RUN apk update && \
+RUN apk update && apk upgrade && \
     apk add --no-cache bash busybox grep lsof nano python3 py3-pip tree jq curl linux-headers docker gcc musl-dev python3-dev && \
     # Setup Docker Compose V2 plugin
     mkdir -p /root/.docker/cli-plugins/ && \
@@ -28,10 +28,16 @@ ENV PUID=1000 \
     REDACTED_ZIP_FILE_PASSWORD="your_zip_file_password" \
     API_KEY="your_api_key" \
     BASIC_AUTH_USER=dcpd_admin \ 
-    BASIC_AUTH_PASS=P@55word
+    BASIC_AUTH_PASS=P@55word \
+	API_PORT=51763 \
+	DEFAULT_WEB_PAGE_BACKGROUND_COLOR=scarlet \
+	DEFAULT_WEB_PAGE_ACCENT_COLOR=gray \
+	DEFAULT_WEB_PAGE_TEXT_COLOR=white \
+	DEFAULT_WEB_PAGE_FONT_NAME=roboto \
+	DEFAULT_WEB_PAGE_FONT_SIZE=15px
 
 # Expose the necessary port (app and api)
-EXPOSE 80 81
+EXPOSE 8080
 
 # Create required volumes
 VOLUME ["/compose-files"]

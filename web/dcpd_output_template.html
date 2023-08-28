@@ -4,21 +4,19 @@
 <head>
     <title>Docker Compose Ports Dump</title>
     <!-- Include jQuery and tablesorter libraries -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js" integrity="sha384-+PEWXCk8F17zxsQsEjkuHjUN4yFMHv03eKxKLrqwDql8FJQM0NeSvHRZFVLfXyn7" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js" integrity="sha384-GSvNdttY9j4EsvjzynYbNqPtzZom2KNTZ3PdjER22zv6gQLLFsfrzATM9cGNF9gX" crossorigin="anonymous"></script>
     <!-- Include default tablesorter theme and custom styles -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/css/theme.default.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/css/theme.default.min.css" integrity="sha384-E0hV8dWZzyLk4H23jYwSYBkMYvinjFf7Qb4YtxFqz8yEoFXYZ+pov0rlg5l9s+ZM" crossorigin="anonymous">
     <link rel="stylesheet" href="../web/dcpd_styles.css">
-	<link rel="icon" href="../web/dcpd_icon.png" type="image/png">
+    <link rel="icon" href="../web/dcpd_icon.png" type="image/png">
     <link rel="shortcut icon" href="../web/dcpd_icon.png" type="image/png">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
+
 <body>
-    <!-- Date and time container -->
-    <div id="datetime-container">
-        <div id="date-time"></div>
-		<div id="time-zone">Timezone: </div>
-    </div>
     <!-- Main container for layout -->
     <div class="container">
         <!-- Side navigation panel -->
@@ -26,39 +24,49 @@
 			<img src="../web/dcpd_icon.png" alt="DCPD Icon" class="navbar-icon">
             <h3>Navigation</h3>
             <a href="#" id="view-ports">Docker Compose Ports</a>
+            <a href="#" id="view-docker-inspect">Docker Inspect</a>
+            <a href="#" id="view-docker-ps">Docker PS</a>
+            <a href="#" id="view-docker-stats">Docker Stats</a>
             <a href="#" id="view-host-networking">Host Networking</a>
 			<a href="#" id="view-info-log">Info Log</a>
             <a href="#" id="view-debug-log">Debug Log</a>
 			<a href="#" id="view-debug-info">Debug Info</a>
 			<a href="#" id="view-config-file">Config File</a>
-			<a href="#" id="view-stats-file">Stastics</a>
+			<a href="#" id="view-stats-file">Statistics</a>
 			<a href="#" id="view-readme">README</a>
 			<a href="#" target="_blank" id="view-api-docs">API Docs</a>
         </div>
-        <!-- Main content area -->
-        <div class="main-content">
-			<!-- Location and temperature widget -->
-			<div id="location_temperature-container">
-				<div id="location"></div>
-				<div id="temperature"></div>
-			</div>
-            <!-- Ports content section -->
-            <div id="ports-content">
-                <h1>Docker Compose Ports Dump</h1>
-                <!-- Version Information -->
-				<div class="version-container">
-						<div class="version-info">Version: v1.0.0</div>
-						<div id="update-info"></div>
-						<!-- GitHub Repository Link -->
-						<div><a href="https://github.com/samcro1967/docker-compose-ports-dump" target="_blank" class="github-link">GitHub</a></div>
+		<div class="main-content">
+			<!-- Ports content section -->
+			<div id="ports-content">
+				<div id="top-container">
+					
+					<!-- Header Content -->
+					<div class="header-row">
+						<!-- Location and temperature widget -->
+						<div id="location_temperature-container">
+							<div id="location"></div>
+							<div id="temperature"></div>
+						</div>
+						
+						<h1>Docker Compose Ports Dump</h1>
+						
+						<!-- Date and time container -->
+						<div id="datetime-container">
+							<div id="date-time"></div>
+							<div id="time-zone">Timezone: </div>
+						</div>
+					</div> <!-- End of header-row -->
+
+					<!-- Search and export buttons -->
+					<div class="action-bar">
+						<input class="search" type="text" placeholder="Global Search...">
+						<button id="exportCSV" class="btn-action">Export to CSV</button>
+						<button id="refreshTable" class="btn-action">Refresh Table</button>
+						<button id="exportRedactedSupportFile" class="btn-action">Export Support Files</button>
+					</div>
 				</div>
-                <!-- Search and export buttons -->
-                <div class="action-bar">
-                    <input class="search" type="text" placeholder="Global Search...">
-                    <button id="exportCSV">Export to CSV</button>
-					<button id="refreshTable">Refresh Table</button>
-					<button id="exportRedactedSupportFile">Export Support Files</button>
-                </div>
+
                 <!-- Table for ports data -->
                 <div class="table-container">
                     <table id="ports_table">
@@ -78,15 +86,89 @@
                     </table>
                 </div>
             </div>
+			<!-- Docker Inspect content section -->
+			<div class="header" id="docker-inspect-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Docker Inspect</h1>
+					<div class="btn-group">
+						<!-- Add the refresh button for Docker Inspect here -->
+						<button class="btn-refresh" id="refresh-docker-inspect">Refresh Docker Inspect</button>
+						<button class="btn-export" id="exportDockerInspect">Export Docker Inspect</button>
+					</div>
+				</div>
+				<div class="scrollable.content-section">
+					<!-- Table for docker inspect data -->
+					<table id="docker_inspect_table">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Service Name</th>
+								<th>Internal Port</th>
+								<th>External Port</th>
+								<th>Mapping Name</th>
+								<th>Mapping Value</th>
+								<th>Protocol</th>
+							</tr>
+						</thead>
+						<tbody>
+							<!-- JavaScript will populate this tbody with rows -->
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<!-- Docker PS content section -->
+			<div class="header" id="docker-ps-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Docker PS</h1>
+					<div class="btn-group">
+						<button class="btn-refresh" id="refresh-docker-ps">Refresh Docker PS</button>
+						<button class="btn-export" id="exportDockerps">Export Docker PS</button>
+					</div>
+				</div>
+				<div class="scrollable.content-section">
+					<!-- Table for docker ps data -->
+					<table id="docker_ps_table">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Image</th>
+								<th>Command</th>
+								<th>Created At</th>
+								<th>Status</th>
+								<th>Names</th>
+							</tr>
+						</thead>
+						<tbody>
+							<!-- JavaScript will populate this tbody with rows -->
+						</tbody>
+					</table>
+				</div>
+			</div>
+            <!-- Docker Stats File content section -->
+            <div class="header" id="docker-stats-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Docker Stats</h1>
+					<div class="btn-group">
+						<button class="btn-refresh" id="refresh-docker-stats">Refresh Docker Stats</button>
+						<button class="btn-export" id="exportDockerStats">Export Docker Stats</button>
+					</div>
+				</div>
+				<div class="scrollable.content-section">
+					<div id="docker-stats-area"></div>
+				</div>
+            </div>
 			<!-- Host Networking content section -->
 			<div class="header" id="host-networking-content" style="display:none;">
 				<div class="sticky-header">
 					<h1>Host Networking Overview</h1>
-					<!-- Add the refresh button for host networking here -->
-					<button class="btn-refresh" id="refresh-host-networking">Refresh Host Networking</button>
-					<button class="btn-export" id="exportHostNetworking">Export Host Networking</button>
+					<!-- Move the buttons inside the sticky-header div -->
+					<div class="btn-group">
+						<button class="btn-refresh" id="refresh-host-networking">Refresh Host Networking</button>
+						<button class="btn-export" id="exportHostNetworking">Export Host Networking</button>
+					</div>
 				</div>
 				<div class="scrollable.content-section">
+					<pre id="host-networking-area"></pre>
 					<!-- Table for host networking data -->
 					<table id="host_networking_table">
 						<thead>
@@ -105,9 +187,10 @@
 			<div class="header" id="info-log-content" style="display:none;">
 				<div class="sticky-header">
 					<h1>Info Log</h1>
-					<button class="btn-refresh" id="refresh-info-log">Refresh Info Log</button>
-					<!-- Add an export button for Info Log -->
-					<button class="btn-export" id="exportInfoLog">Export Info Log</button>
+					<div class="btn-group">
+						<button class="btn-refresh" id="refresh-info-log">Refresh Info Log</button>
+						<button class="btn-export" id="exportInfoLog">Export Info Log</button>
+					</div>
 				</div>
 				<div class="scrollable.content-section">
 					<pre id="info-log-area"></pre>
@@ -117,9 +200,10 @@
 			<div class="header" id="debug-log-content" style="display:none;">
 				<div class="sticky-header">
 					<h1>Debug Log</h1>
-					<button class="btn-refresh" id="refresh-debug-log">Refresh Debug Log</button>
-					<!-- Add an export button for Debug Log -->
-					<button class="btn-export" id="exportDebugLog">Export Debug Log</button>
+					<div class="btn-group">
+						<button class="btn-refresh" id="refresh-debug-log">Refresh Debug Log</button>
+						<button class="btn-export" id="exportDebugLog">Export Debug Log</button>
+					</div>
 				</div>
 				<div class="scrollable.content-section">
 					<pre id="debug-log-area"></pre>
@@ -129,9 +213,10 @@
 			<div class="header" id="debug-info-content" style="display:none;">
 				<div class="sticky-header">
 					<h1>Debug Information</h1>
-					<button class="btn-refresh" id="refresh-debug-info">Refresh Debug Info</button>
-					<!-- Add an export button for Debug Info -->
-					<button class="btn-export" id="exportDebugInfo">Export Debug Info</button>
+					<div class="btn-group">
+						<button class="btn-refresh" id="refresh-debug-info">Refresh Debug Info</button>
+						<button class="btn-export" id="exportDebugInfo">Export Debug Info</button>
+					</div>
 				</div>
 				<div class="scrollable.content-section">
 					<pre id="debug-info-area"></pre>
@@ -141,19 +226,23 @@
             <div class="header" id="config-file-content" style="display:none;">
 				<div class="sticky-header">
 					<h1>Config File</h1>
-					<button class="btn-refresh" id="refresh-config-file">Refresh Config File</button>
-					<button class="btn-export" id="exportConfigFile">Export Config File</button>
+					<div class="btn-group">
+						<button class="btn-refresh" id="refresh-config-file">Refresh Config File</button>
+						<button class="btn-export" id="exportConfigFile">Export Config File</button>
+					</div>
 				</div>
 				<div class="scrollable.content-section">
 					<pre id="config-file-area"></pre>
 				</div>
             </div>
-            <!-- Stats File content section -->
-            <div class="header" id="stats-file-content" style="display:none;">
+			<!-- Stats File content section -->
+			<div class="header" id="stats-file-content" style="display:none;">
 				<div class="sticky-header">
-					<h1>Stastics</h1>
-					<button class="btn-refresh" id="refresh-stats-file">Refresh Stats File</button>
-					<button class="btn-export" id="exportStatsFile">Export Stats File</button>
+					<h1>Statistics</h1>
+					<div class="btn-group">
+						<button class="btn-refresh" id="refresh-stats-file">Refresh Stats File</button>
+						<button class="btn-export" id="exportStatsFile">Export Stats File</button>
+					</div>  <!-- Corrected this line -->
 				</div>
 				<div class="scrollable.content-section">
 					<pre id="stats-file-area"></pre>
@@ -165,19 +254,57 @@
 					<h1>README</h1>
 				</div>
 				<div class="scrollable.content-section">
-					<!-- Add the target="_blank" attribute to open in a new tab -->
+					<p>Click the link below to view the README documentation in a new tab.</p>
 					<a href="../README.html" target="_blank">Open README in a New Tab</a>
 				</div>
 			</div>
-			<!-- Footer container for additional information -->
-			<div id="footer-container">
-				<div id="file-name">File name: <span id="current-file-name"></span></div>
-				<div id="last-updated">Last updated: <span id="file-update-time"></span></div>
+			<!-- API Docs content section -->
+			<div class="header" id="api-docs-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>API Documentation</h1>
+				</div>
+				<div class="scrollable.content-section">
+					<p>Click the link below to view the API documentation in a new tab.</p>
+					<a href="#" id="actual-api-doc-link" target="_blank">Open API Documentation</a>
+				</div>
+			</div>
+			<div id="rounded-footer-container">
+				<div class="footer-version-wrapper">
+					<!-- Footer container for additional information -->
+					<div id="footer-container">
+						<div id="file-name">File: <span id="current-file-name"></span></div>
+						<div id="last-updated">Last updated: <span id="file-update-time"></span></div>
+					</div>
+					<!-- Version Information -->
+					<div class="version-container">
+						<div class="version-info">Version: v1.1.0</div>
+						<div class="link-container">
+							<div id="update-info"></div>
+							<!-- GitHub Repository Link -->
+							<div><a href="https://github.com/samcro1967/docker-compose-ports-dump" target="_blank" class="github-link">GitHub</a></div>
+						</div>
+					</div>
+				</div>
 			</div>
     </div>
     <!-- Include the JavaScript script -->
     <script src="../web/dcpd_js_script.js"></script>
 	<script src="../web/dcpd_js_functions.js"></script>
 	<script src="../web/dcpd_js_eventListeners.js"></script>
+	<script src="../web/dcpd_js_docker_inspect.js"></script>
+	<script src="../web/dcpd_js_host.networking.js"></script>
+	<script src="../web/dcpd_js_debug_logs.js"></script>
+	<script src="../web/dcpd_js_info_logs.js"></script>
+	<script src="../web/dcpd_js_debug_info.js"></script>
+	<script src="../web/dcpd_js_config_file.js"></script>
+	<script src="../web/dcpd_js_stats_file.js"></script>
+	<script src="../web/dcpd_js_readme.js"></script>
+	<script src="../web/dcpd_js_apidocs.js"></script>
+	<script src="../web/dcpd_js_loc_and_temp.js"></script>
+	<script src="../web/dcpd_js_date_and_time.js"></script>
+	<script src="../web/dcpd_js_check_for_update.js"></script>
+	<script src="../web/dcpd_js_update_footer.js"></script>
+	<script src="../web/dcpd_js_docker_ps.js"></script>
+	<script src="../web/dcpd_js_docker_stats.js"></script>
 </body>
 </html>

@@ -4,171 +4,64 @@
 // Event Listeners
 // ==========================
 
-$(".search").on("input", function () {
-    var searchText = $(this).val();
-    if (searchText === "") {
-        // If search text is empty, show all table rows
-        $("#ports_table tbody tr").show();
-    } else {
-        $(".placeholder-row").hide();  // Hiding any placeholder rows
-        // Filtering and displaying table rows based on search text
-        $("#ports_table tbody tr").filter(function () {
-            return $(this).text().toLowerCase().indexOf(searchText.toLowerCase()) === -1;
-        }).hide();
-        $("#ports_table tbody tr").filter(function () {
-            return $(this).text().toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
-        }).show();
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    // Using the body as the parent and delegate the event to the ".search" input field
+    document.body.addEventListener('input', function(e) {
+        if (e.target.matches('.search')) {
+            const searchText = e.target.value;
+
+            // If the search input is empty, display all rows in the "#ports_table"
+            if (searchText === "") {
+                document.querySelectorAll("#ports_table tbody tr").forEach(row => row.style.display = '');
+            } else {
+                // Hide the placeholder row if any input is present
+                const placeholderRow = document.querySelector(".placeholder-row");
+                if (placeholderRow) placeholderRow.style.display = 'none';
+
+                // Check each row in the table to determine if it matches the search input
+                document.querySelectorAll("#ports_table tbody tr").forEach(row => {
+                    if (row.textContent.toLowerCase().includes(searchText.toLowerCase())) {
+                        row.style.display = ''; // Display rows that match
+                    } else {
+                        row.style.display = 'none'; // Hide rows that do not match
+                    }
+                });
+            }
+        }
+    });
 });
 
-// Show the Host Networking content and load the data
-$('#view-host-networking').on('click', function(e){
-    e.preventDefault();
-    showContent('host-networking-content');
 
-	// Load the host networking data and display it in the table
-    loadHostNetworkingData();
-});
-
-document.getElementById('refresh-host-networking').addEventListener('click', function() {
-    // Reload and display the host networking
-    loadHostNetworkingData();
-});
-
-// Event listener for the CSV export button
-$('#exportCSV').click(function() {
+// Add an event listener for the 'exportCSV' button
+document.getElementById('exportCSV').addEventListener('click', function() {
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += ["Service Name", "External Port", "Internal Port", "Port Mapping", "Mapped App"].join(",") + "\n";
-    
-    // Loop through visible table rows and build CSV content
-    $("#ports_table tbody tr:visible").each(function() {
-        let row = [];
-        $(this).find('td').each(function() {
-            row.push($(this).text());
-        });
-        csvContent += row.join(",") + "\n";
+
+    // For each visible row in the table, extract its data and add it to the CSV content
+    document.querySelectorAll("#ports_table tbody tr").forEach(row => {
+        if (getComputedStyle(row).display !== 'none') {
+            const rowData = Array.from(row.querySelectorAll('td')).map(td => td.textContent);
+            csvContent += rowData.join(",") + "\n";
+        }
     });
 
-    // Creating a downloadable link for the CSV content
-    var encodedUri = encodeURI(csvContent);
-    var link = document.createElement("a");
+    // Convert the CSV content into a downloadable link and initiate the download process
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "../data/dcpd.csv");
     document.body.appendChild(link);
-    link.click();  // Triggering a click event to initiate the download
-    document.body.removeChild(link);  // Removing the temporary link
+    link.click();
+    document.body.removeChild(link);
 });
 
-
+// Add an event listener for the 'view-ports' button to display the ports content
 document.getElementById('view-ports').addEventListener('click', function() {
-    // Show the Ports content and hide others
-    showContent('ports-content');
+    highlightActiveLink(this);
+	showContent('ports-content');
 });
 
-document.getElementById('view-info-log').addEventListener('click', function() {
-    // Show the Info Log content, load and display the info log
-    showContent('info-log-content');
-    loadLog('../config/logs/dcpd_log_info.log', 'info-log-area');
-});
-
-document.getElementById('view-debug-log').addEventListener('click', function() {
-    // Show the Debug Log content, load and display the debug log
-    showContent('debug-log-content');
-    loadLog('../config/logs/dcpd_log_debug.log', 'debug-log-area');
-});
-
-// Event listeners for refreshing log content
-document.getElementById('refresh-info-log').addEventListener('click', function() {
-    // Reload and display the info log
-    loadLog('../config/logs/dcpd_log_info.log', 'info-log-area');
-});
-
-document.getElementById('refresh-debug-log').addEventListener('click', function() {
-    // Reload and display the debug log
-    loadLog('../config/logs/dcpd_log_debug.log', 'debug-log-area');
-});
-
-document.getElementById('view-debug-info').addEventListener('click', function() {
-    // Show the Debug Info content and hide others
-    showContent('debug-info-content');
-    
-    // Load and display the debug info from the file using the DATA_PATH constant
-    loadLog(DATA_PATH + 'dcpd_debug.txt', 'debug-info-area');
-});
-
-document.getElementById('view-config-file').addEventListener('click', function() {
-    // Show the Debug Info content and hide others
-    showContent('config-file-content');
-    
-    // Load and display the debug info from the file using the DATA_PATH constant
-    loadLog('../config/dcpd_config.py', 'config-file-area');
-});
-
-document.getElementById('view-stats-file').addEventListener('click', function() {
-    // Show the Stats content and hide others
-    showContent('stats-file-content');
-    
-    // Load and display the debug info from the file using the DATA_PATH constant
-    loadLog('../data/dcpd_stats.txt', 'stats-file-area');
-});
-
-document.getElementById('refresh-debug-info').addEventListener('click', function() {
-    // Reload and display the config file
-    loadLog(DATA_PATH + 'dcpd_debug.txt', 'debug-info-area');
-});
-
-document.getElementById('refresh-config-file').addEventListener('click', function() {
-    // Reload and display the config file
-    loadLog('dcpd_config.py', 'config-file-area');
-});
-
-document.getElementById('refresh-stats-file').addEventListener('click', function() {
-    // Reload and display the config file
-    loadLog('../data/dcpd_stats.txt', 'stats-file-area');
-});
-
-// Event listeners for the export buttons
-$('#exportInfoLog').click(function() {
-    exportLog('../config/logs/dcpd_log_info.log', 'info-log-area');
-});
-
-$('#exportDebugLog').click(function() {
-    exportLog('../config/logs/dcpd_log_debug.log', 'debug-log-area');
-});
-
-$('#exportDebugInfo').click(function() {
-    exportLog(DATA_PATH + 'dcpd_debug.txt', 'debug-info-area');
-});
-
-// Event listener for exporting host networking data
-$('#exportHostNetworking').click(function() {
-    exportLog(DATA_PATH + 'dcpd_host_networking.csv', 'host-networking-area');
-});
-
-// Event listener for exporting config file
-$('#exportConfigFile').click(function() {
-    exportLog('../config/dcpd_config.py', 'config-file-area');
-});
-
-// Event listener for exporting stats file
-$('#exportStatsFile').click(function() {
-    exportLog('../data/dcpd_stats.txt', 'stats-file-area');
-});
-
-// Event listener for exporting redacted support file
-$('#exportRedactedSupportFile').click(function() {
+// Add an event listener for the 'exportRedactedSupportFile' button to initiate the export process
+document.getElementById('exportRedactedSupportFile').addEventListener('click', function() {
     exportRedactedSupportFile();
-});
-
-// Event listener for viewing README.md
-document.getElementById('view-readme').addEventListener('click', function() {
-    // Show the Debug Log content, load and display the debug log
-    showContent('readme-content');
-    loadLog('../README.md', 'readme-area');
-});
- // Event listener for API Docs
-document.addEventListener("DOMContentLoaded", function() {
-	const currentHost = window.location.protocol + '//' + window.location.hostname + ':8092';
-	const apiDocsLink = currentHost + '/apidocs/';
-	document.getElementById('view-api-docs').setAttribute('href', apiDocsLink);
 });

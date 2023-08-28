@@ -11,7 +11,7 @@ Highlights
 
 New Features
 	1: View and export all data and logs from the web page
-	2: Containizered application for eas of deployment
+	2: Containizered application for ease of deployment
 	3: Docker Compose Ports link now includes ports mapped to host network and associated service 
 	4: API implemented to retrieve health and version information
 	5: Implemented flask and gunicorn to serve the api

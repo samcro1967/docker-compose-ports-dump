@@ -1,90 +1,88 @@
 /* dcpd_styles.css */
 
-@keyframes blinker {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+#docker-stats-area table {
+    margin-top: 20px;
+	width: 100%;
+    border-collapse: collapse;
+}
+#docker-stats-area td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    white-space: nowrap;
 }
 
-.blinking {
-  animation: blinker 1s linear infinite;
-}
+#docker-stats-area td:nth-child(1) { width: 25%; }
+#docker-stats-area td:nth-child(2) { width: 15%; }
+#docker-stats-area td:nth-child(3) { width: 25%; }
+#docker-stats-area td:nth-child(4) { width: 15%; }
+#docker-stats-area td:nth-child(5) { width: 20%; }
 
-#footer-container {
-    position: absolute; /* Position absolutely */
-    bottom: 20px; /* Offset from the bottom edge */
-    left: 50%; /* Center it horizontally */
-    transform: translateX(-50%); /* Move it to the left by half of its own width to center it */
-    padding: 8px 15px;
-    border-radius: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    text-align: center;
-    display: inline-block;
-    align-items: center;
-    max-width: 250px;
-    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
-    color: var(--dynamic-text-color); /* Use the dynamic text color */
+#docker-stats-area tr:first-child td {
     font-weight: bold;
-    font-size: 15px;
+    background-color: #f2f2f2;
 }
 
-/* Styles for elements within the footer */
-#file-name, #last-updated {
-    margin: 0; /* No margin for a compact display */
-    font-size: 0.9em; /* Slightly smaller font size for compactness */
-    text-align: center; /* Centered text */
-}
+/* Variables and Base Styles */
 
-.version-container {
+body {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Align content horizontally to the center */
-    justify-content: center; /* Align content vertically to the center */
-    padding: 10px; /* Add padding for spacing */
-    background-color: var(--dynamic-background-color);
-    color: var(--dynamic-text-color);
-    font-weight: bold;
-    font-size: 15px;
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    z-index: 1000;
-    border-radius: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    min-height: 100vh;
 }
 
-.version-info,
-.update-info,
-.github-link {
-    margin: 0; /* No margin for a compact display */
-    font-size: 0.9em; /* Slightly smaller font size for compactness */
-    text-align: center; /* Centered text */
-}
+/* Header Styles */
 
-.header {
+#top-container {
+    display: flex;
+	flex-direction: column;
+    justify-content: space-between;
     align-items: center;
+    padding: 10px 20px;
+    background-color: var(--dynamic-accent-color);
+    border-radius: 10px;
+    margin-bottom: 20px;
 }
 
-.btn-refresh {
+.header-row {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: +20px;
+	width: 100%;
+}
+
+h1 {
+    text-align: center; /* Center the text inside the header */
+    flex: 1; /* This will allow the header to take up all the available space between the two containers */
+}
+
+#location_temperature-container {
+    justify-self: flex-start; /* Optional, since space-between will do this for you, but you can be explicit */
+}
+
+#datetime-container {
+    justify-self: flex-end; /* Optional, since space-between will do this for you, but you can be explicit */
+}
+
+/* Main Layout and Containers */
+
+.container {
+    display: flex;
+    flex: 1;
+}
+
+.table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    position: relative;
 }
 
 .scrollable.content-section {
-    max-height: calc(100vh - 100px); /* Adjust as necessary based on the height of your header, refresh button, and any other UI elements */
-    overflow-y: auto; /* Allow scrolling */
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
 }
 
-.sticky-header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
-    color: var(--dynamic-text-color); /* Use the dynamic text color */
-	font-weight: bold;
-	font-size: 15px
-}
+/* Side Navigation Styles */
 
 .navbar-icon {
     display: block;
@@ -97,145 +95,268 @@
     box-sizing: border-box;  /* Makes sure the total size including padding remains as defined above */
 }
 
-/* Body styles to setup flex container and ensure full viewport height */
-body {
-    display: flex;
-    flex-direction: column;
+.sidenav {
+    width: 20%;
+    padding: 20px 0;
+    box-sizing: border-box;
     min-height: 100vh;
+    position: fixed;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+    background-color: var(--dynamic-background-color);
+    color: var(--dynamic-text-color);
+    font-weight: bold;
+    font-size: var(--dynamic-font-size);
+	font-family: var(--dynamic-font-name);
 }
 
-/* Main container to layout the side navigation and main content */
-.container {
-    display: flex;
-    flex: 1;  /* This ensures that the container takes all the available space */
-}
-
-/* Side navigation header styles for better padding */
 .sidenav h3 {
     padding: 0 20px;
 }
 
-/* Side navigation bar styles */
-.sidenav {
-    width: 20%;
-    padding: 20px 0; /* Top and bottom padding */
-    box-sizing: border-box; /* Include padding and border in width and height calculations */
-    min-height: 100vh; /* Ensure it covers full viewport height */
-    position: fixed; /* Fixed positioning to keep it visible when scrolling */
-    height: 100vh;
-    top: 0; /* Start from the top edge */
-    left: 0; /* Start from the left edge */
-    overflow-y: auto; /* Allow vertical scrolling if content overflows */
-    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
-    color: var(--dynamic-text-color); /* Use the dynamic text color */
-	font-weight: bold;
-	font-size: 15px
-}
-
-/* Side navigation link styles */
 .sidenav a {
     display: block;
-    font-size: 16px; /* Standard font size for links */
-    padding: 8px 16px; /* Padding for aesthetics */
-    color: white; /* Text color to contrast with the dark background */
-    text-decoration: none; /* Remove any default underlines */
+    font-size: var(--dynamic-font-size);
+    padding: 8px 16px;
+    color: white;
+    text-decoration: none;
 }
 
-/* Side navigation link hover styles for better user interaction */
-.sidenav a:hover {
-    background-color: #34575e; /* Slightly darker shade on hover */
-    color: #ffffff; /* Maintain white text color */
-}
-
-/* Side navigation link active styles to show the current page */
+.sidenav a:hover,
 .sidenav a.active {
-    background-color: #E74C3C; /* Distinct color for the active link */
-    color: #ffffff; /* White text for contrast */
+    background-color: var(--dynamic-accent-color);
+    color: #ffffff;
 }
 
-/* Styles for the main content area to the right of the side navigation */
+/* Main Content Styles */
+
 .main-content {
-    position: relative; /* Set positioning context for potential child elements */
-    width: 80%; /* Take up the remaining width after the side navigation */
-    padding-left: 20px; /* Padding to prevent content from sticking to the navigation */
-    box-sizing: border-box; /* Include padding in width calculations */
-    margin-left: 20%; /* Offset to the right by the width of the side navigation */
-    text-align: center; /* Central alignment for main content */
+    position: relative;
+    width: 80%;
+    padding-left: 20px;
+    box-sizing: border-box;
+    margin-left: 20%;
+    text-align: center;
 }
 
-/* Styles to control the visible portion of a table */
-.table-container {
-    max-height: 400px; /* Limit height to show only some rows at a time */
-    overflow-y: auto; /* Allow vertical scrolling for the table */
-    position: relative; /* Set positioning context for child elements */
+.left-align {
+    text-align: left;
 }
 
-/* Sticky table header styles to keep headers visible while scrolling */
-#ports_table thead, 
+/* Table Styles */
+
+#ports_table thead,
 #ports_table thead th {
     position: sticky;
     top: 0;
-    background-color: white; /* Solid background to ensure readability */
-    z-index: 2; /* Keep headers above table rows */
+    background-color: white;
+    z-index: 2;
 }
 
-/* Styles for fixed headers when using the tablesorter plugin */
 .tablesorter-stickyHeader {
     position: fixed !important;
     top: 0 !important;
-    z-index: 100; /* Ensure the sticky header is on top of most other elements */
-    background-color: #fff; /* Solid background for readability */
-    border: 1px solid #ddd; /* Define border for clear separation */
-    margin: 0; /* No margin to keep header position consistent */
-    width: auto; /* Automatic width based on content */
-    box-shadow: 0 1px 3px rgba(0,0,0,.3); /* Shadow for a raised appearance */
+    z-index: 100;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    margin: 0;
+    width: auto;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
 }
 
-/* Styles for a fixed date/time widget */
-#datetime-container {
-    position: fixed; /* Fixed position to keep it visible */
-    top: 10px; /* Offset from the top edge */
-    right: 10px; /* Offset from the right edge */
-    padding: 8px 15px; /* Padding around content */
-    border-radius: 15px; /* Rounded corners */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); /* Drop shadow for depth */
-    z-index: 1000; /* Ensure the widget is on top of other content */
-    text-align: center; /* Centered text within the widget */
-    display: inline-block; /* Block display but inline behavior */
-    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
-    color: var(--dynamic-text-color); /* Use the dynamic text color */
-	font-weight: bold;
-	font-size: 15px
+#docker_inspect_table th, 
+#docker_inspect_table td {
+    padding: 0 15px;
 }
 
-/* Styles for individual elements within the date/time widget */
-#date-time, #time-zone, #location, #temperature {
-    margin: 0; /* No margin for a compact display */
-    font-size: 0.9em; /* Slightly smaller font size for compactness */
-    text-align: center; /* Centered text */
+#docker_ps_table td {
+    font-size: 13.5px;
+    padding-left: 7.5px;
+    padding-right: 7.5px;
 }
 
-/* Styles for a fixed location and temperature widget */
+#docker-stats-area, #host-networking-area, #info-log-area, #debug-log-area, #debug-info-area, #config-file-area, #stats-file-area {
+    white-space: pre-wrap;
+    text-align: left;
+    font-size: var(--dynamic-font-size);
+	font-family: var(--dynamic-font-name);
+}
+
+/* Widgets and Elements */
+
+#datetime-container,
 #location_temperature-container {
-    position: absolute; /* Absolute position within a relative or fixed parent */
-    top: 10px; /* Offset from the top edge */
-    left: 10px; /* Offset from the left edge */
-    padding: 8px 15px; /* Padding around content */
-    border-radius: 15px; /* Rounded corners */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); /* Drop shadow for depth */
-    z-index: 1000; /* Ensure the widget is on top of other content */
-    text-align: center; /* Centered text within the widget */
-    display: inline-block; /* Block display but inline behavior */
-    width: 200px; /* Specific width for this widget */
-    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
-    color: var(--dynamic-text-color); /* Use the dynamic text color */
-	font-weight: bold;
-	font-size: 15px;
+    padding: 8px 15px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    background-color: var(--dynamic-background-color);
+    color: var(--dynamic-text-color);
+    font-weight: bold;
+    font-size: var(--dynamic-font-size);
+	font-family: var(--dynamic-font-name);
+    margin: 10px 0;
+    flex-shrink: 0;
+    position: relative;
 }
 
-/* Styles for log areas to format and present log entries */
-#info-log-area, #debug-log-area, #debug-info-area, #config-file-area, #stats-file-area {
-    text-align: left; /* Left-aligned text for log entries */
-    white-space: pre-wrap; /* Preserve whitespace and breaks in log entries */
-	font-size: 115%; /* This will increase the font-size of the entire body by 15% */
+#location_temperature-container {
+    width: 200px;
+}
+
+#date-time, 
+#time-zone, 
+#location, 
+#temperature,
+#file-name, 
+#last-updated,
+.version-info,
+.update-info,
+.github-link {
+    margin: 0;
+    font-size: var(--dynamic-font-size);
+	font-family: var(--dynamic-font-name);
+	font-weight: bold;
+    text-align: center;
+}
+
+/* Footer Styles */
+
+.footer-version-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#rounded-footer-container {
+    background-color: var(--dynamic-accent-color);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+	display: none;
+}
+
+#footer-container {
+    padding: 8px 15px;
+    border-radius: 15px;
+    text-align: center;
+    display: inline-block;
+    align-items: center;
+    max-width: 250px;
+    background-color: var(--dynamic-background-color);
+    color: var(--dynamic-text-color);
+    font-weight: bold;
+    font-size: var(--dynamic-font-size);
+	font-family: var(--dynamic-font-name);
+}
+
+.version-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: var(--dynamic-background-color);
+    color: var(--dynamic-text-color);
+    font-weight: bold;
+    font-size: var(--dynamic-font-size);
+	font-family: var(--dynamic-font-name);
+    border-radius: 15px;
+    position: absolute;
+    left: 0;
+    transform: translateY(-50%);
+    top: 50%;
+}
+
+.link-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px; /* This will create a gap between the children of .link-container */
+    margin-top: 5px; /* Increase this value to add more space between rows */
+}
+
+.version-container .github-link {
+    background-color: #FFFFFF;
+    padding: 5px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #000000;
+    transition: background-color 0.3s, color 0.3s;
+    margin-right: 0px;
+}
+
+.version-container .github-link:hover {
+    background-color: #e6e6e6;
+    color: #000000;
+}
+
+.version-container #update-info {
+    background-color: #FFFFFF;
+    padding: 5px 10px;
+    border-radius: 4px;
+    color: #000000;
+    margin-left: 0px;
+}
+
+/* Miscellaneous Styles */
+
+.ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+
+.sticky-header > * {
+    margin: 0;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* Horizontally center children */
+    justify-content: space-between; /* Maximum vertical space between children */
+    background-color: var(--dynamic-accent-color);
+    border-radius: 15px;
+    padding: 5px 10px;
+    z-index: 1000;
+}
+
+.sticky-header h1 {
+    margin-bottom: 10px; /* Spacing below the h1 */
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px; /* Space between buttons */
+}
+
+.btn-action,
+.btn-refresh,
+.btn-export {
+    background-color: var(--dynamic-background-color);  /* Using the accent color for button background */
+    color: var(--dynamic-text-color);  /* Using the text color for button text */
+    border: none;
+    padding: 10px 15px;  /* Adjust this to change the button size */
+    border-radius: 5px;  /* Rounded corners for the buttons */
+    cursor: pointer;     /* To show a hand cursor when hovering over the button */
+    transition: background-color 0.3s;  /* Smooth transition for hover effect */
+	font-weight: bold;
+	font-size: 12px;
+	flex: 1;
+}
+
+.btn-action:active,
+.btn-refresh:active,
+.btn-export:active {
+    background-color: rgba(0, 0, 0, 0.1);  /* Adds a slight dark overlay */
+    transform: scale(0.98);  /* Slightly reduces the size for a pressed effect */
+    transition: none;  /* Disables transition to make the active effect instant */
 }

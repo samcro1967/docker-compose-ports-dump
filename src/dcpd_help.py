@@ -1,14 +1,23 @@
-# dcpd_help.py
+"""
+dcpd_help.py
 
+This module provides helper functions for the Docker Compose Ports Dump (DCPD) application.
+"""
+
+# Standard library imports
 import sys
 
+# pylint: disable=wrong-import-position
 # Add config to the sys path
 sys.path.append('../config')
 
+# Third-party imports
 from colorama import Fore, Style
-import dcpd_config as dcpd_config
-import dcpd_log_info as dcpd_log_info
-import dcpd_utils as dcpd_utils
+
+# Local imports
+import dcpd_config
+import dcpd_log_info
+import dcpd_utils
 
 # Create an alias for convenience
 logger_info = dcpd_log_info.logger
@@ -31,7 +40,7 @@ def print_examples(paginate=True, verbose=False):
         None
     """
     logger_info.info("Beginning to print examples.")
-    
+
     # Get the common help text containing examples
     output_text = common_help_text()
 
@@ -45,13 +54,16 @@ def print_examples(paginate=True, verbose=False):
             # Display the output without pagination
             print(output_text)
             logger_info.info("Finished printing examples without pagination.")
-    except Exception as e:
-        error_message = f"{Fore.RED}An error occurred while displaying the examples: {e}{Style.RESET_ALL}"
+
+    except ValueError as value_error:
+        error_message = f"{Fore.RED}Please provide a valid input: {value_error}{Style.RESET_ALL}"
         print(error_message)
         logger_info.error(error_message)
 
-        if verbose:
-            print("Error details have been logged.")
+    except KeyboardInterrupt:
+        error_message = f"{Fore.RED}User interrupted the display process.{Style.RESET_ALL}"
+        print(error_message)
+        logger_info.warning(error_message)
 
 # -------------------------------------------------------------------------
 def common_help_text():
@@ -155,40 +167,35 @@ def print_help(verbose=False):
         None
     """
     # ANSI color codes
-    RESET = "\033[0m"
-    RED = "\033[91m"
+    reset_color = "\033[0m"
+    red_color = "\033[91m"
 
     if not isinstance(verbose, bool):
         raise ValueError("The verbose argument should be of type bool.")
 
     try:
         logger_info.info("Beginning to print help message.")
-        
+
         help_message = (
-            "usage: docker_ports_dump.py [-h] [-d] [-e] [-n] [-o] [-f FILE] [-v VPN_CONTAINER_NAME] [-s] [-V]\n\n"
-            "Parse Docker Compose file and extract ports.\n"
-            "\noptions:\n"
-            "  -h, --help                   show this help message and exit.\n"
-            "  -d, --debug                  Print the debug info. All other arguments ignored.\n"
-            "  -e, --sort-by-external-port  Sort the table by External Port.\n"
-            "  -n, --sort-by-service-name   Sort the table by Service Name.\n"
-            "  -s, --show-examples          Show examples of port.mapping configuration in a docker-compose.yml file.\n"
-            "  -V, --version                Show version information and exit.\n"
-            "  -o, --output                 Generate a web page with the port mappings.\n\n"
-            "All options are mutually exclusive and cannot be used together.\n"
-            f"{RED}DEFAULT_DOCKER_COMPOSE_FILE must be configured in dcpd_config.py{RESET}"
+            f"usage: docker_ports_dump.py [-h] [-d] [-e] [-n] [-o] [-f FILE] [-v VPN_CONTAINER_NAME] [-s] [-V]\n\n"
+            f"Parse Docker Compose file and extract ports.\n"
+            f"\noptions:\n"
+            f"  -h, --help                   show this help message and exit.\n"
+            f"  -d, --debug                  Print the debug info. All other arguments ignored.\n"
+            f"  -e, --sort-by-external-port  Sort the table by External Port.\n"
+            f"  -n, --sort-by-service-name   Sort the table by Service Name.\n"
+            f"  -s, --show-examples          Show examples of port.mapping configuration in a docker-compose.yml file.\n"
+            f"  -V, --version                Show version information and exit.\n"
+            f"  -o, --output                 Generate a web page with the port mappings.\n\n"
+            f"All options are mutually exclusive and cannot be used together.\n"
+            f"{red_color}DEFAULT_DOCKER_COMPOSE_FILE must be configured in dcpd_config.py{reset_color}"
         )
 
         print(help_message)
         logger_info.info("Finished printing help message.")
-        
+
         if verbose:
             print("Help message printed successfully.")
 
     except UnicodeEncodeError:
-        print(f"{RED}Error: Unable to print due to encoding issues. Please check your terminal's character support.{RESET}")
-    except Exception as e:
-        if verbose:
-            print(f"{RED}Error: An unexpected error occurred. Details: {e}{RESET}")
-        logger_info.error(f"Unexpected error during print_help execution: {e}")
-
+        print("Error: Unable to print due to encoding issues. Please check your terminal's character support.")

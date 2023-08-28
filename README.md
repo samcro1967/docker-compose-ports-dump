@@ -5,13 +5,13 @@
 - [Installation](#installation)
 - [Local Usage Instructions](#local-usage-instructions)
 - [To DO](#to-do)
+- [Security Vulnerabilities](#security-vulnerabilities)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
 
 # **Summary**
-This script parses a docker-compose.yml file(s) and dumps all assigned ports into a table and displays them in a terminal.  It defaults to sort by the order services are defined in docker-compose.yml.  It also has options to sort by external ports or by container names.  If you have containers that are attached to a VPN container, you can also have those mapped as well.
+This script parses a docker-compose.yml file(s) and dumps all assigned ports into a table and displays them in either the terminal or in a web page.  It defaults to sort by the order services are defined in docker-compose.yml.  It also has options to sort by external ports or by container names.  If you have containers that are attached to a VPN container, you can also have those mapped as well.
 
-It can also generate a web page.  The web page must be run from a web server and viewed via http ot https as it includes JavaScript.  The web page also contains view of all services mapped to host networking as well as the info and debug logs.
 
 The script does not change the existing file and only needs read access to your docker-compose.yml file.
 
@@ -22,14 +22,15 @@ This was developed on Ubuntu 22.04 running Python 3.10.6.  Use at your own risk.
 [Table of Contents](#table-of-contents)
 
 * Collect and display the following either in the terminal or on a web page
-	* All external and internal port definitons for services in docker-compose.yml
+	* All external and internal port definitions for services in docker-compose.yml
 	* Ports mapped to a VPN container
 * Additionally display the following on the web page
 	* Containers attached to host networking
 	* info and debug logs
+	* docker inspect, ps, and stats info
 	* dcpd debug information
 	* dcpd configuration file
-	* Stastics page
+	* dcpd statistics page
 * Export of all data from the web page
 * Export all support files into redacted and password protected zip file
 * Supports one or more docker-compose files
@@ -53,6 +54,8 @@ This was developed on Ubuntu 22.04 running Python 3.10.6.  Use at your own risk.
 cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 24 ; echo
 ```
 
+### Accepted values for DEFAULT_WEB_PAGE variables can be found in dcpd_config_example.py
+
 ### **Docker Compose**
 ```
   dcpd:
@@ -60,22 +63,29 @@ cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 24 ; echo
     image: ghcr.io/samcro1967/docker_compose_ports_dump:latest
     container_name: dcpd
     environment:
-      - TZ=${TZ}
+      - TZ=your_time_zone
       - PUID=1000
       - PGID=1000
       - CRON_SCHEDULE=*/15 * * * *
       - DOCKER_COMPOSE_FILE_PATHS="/compose-files/docker-compose.yml,/app/compose-files/docker-compose_test.yml"
-      - DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name #Optional
-      - DEFAULT_DCPD_USERNAME=your_user_name #Optional
-      - DEFAULT_DCPD_PASSWORD=your_user_password #Optional
-      - REDACTED_ZIP_FILE_PASSWORD=P@55w0rd #Optional
+      - DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name
+      - REDACTED_ZIP_FILE_PASSWORD=your_redacted_file_password
       - API_KEY=your_random_api_key
+      - API_PORT=51763 # Optional, To override the default
+      - BASIC_AUTH_USER=your_user_name
+      - BASIC_AUTH_PASS=your_user_password
+      - DEFAULT_WEB_PAGE_BACKGROUND_COLOR=scarlet #Optional
+      - DEFAULT_WEB_PAGE_ACCENT_COLOR=gray #Optional
+      - DEFAULT_WEB_PAGE_TEXT_COLOR=white #Optional
+      - DEFAULT_WEB_PAGE_FONT_NAME=roboto #Optional
+      - DEFAULT_WEB_PAGE_FONT_SIZE=medium #Optional
     ports:
-      - "80:80"
-      - "81:81"
+      - "8080:8080"
+      - "51763:51763" # External and Internal ports must be the same and match API_PORT if set
     volumes:
       # root of folder where all docker compose folder reside
       - /path/to/compose/files:/compose-files
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     healthcheck:
       test: /app/healthcheck.sh
       interval: 60s
@@ -88,19 +98,26 @@ cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 24 ; echo
 docker run \
   --hostname dcpd \
   --name dcpd \
-  -e TZ=${TZ} \
+  -e TZ=your_time_zone \
   -e PUID=1000 \
   -e PGID=1000 \
-  -e CRON_SCHEDULE='*/15 * * * *' \
-  -e DOCKER_COMPOSE_FILE_PATHS="/compose-files/docker-compose.yml,/compose-files/docker-compose_test.yml" \
-  -e DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name \
-  -e DEFAULT_DCPD_USERNAME=your_user_name \
-  -e DEFAULT_DCPD_PASSWORD=your_user_password \
-  -e REDACTED_ZIP_FILE_PASSWORD=P@55w0rd \
-  -e API_KEY=your_random_api_key \
-  -p 80:80 \
-  -p 81:81 \
+  -e CRON_SCHEDULE=*/15 * * * *
+  -e DOCKER_COMPOSE_FILE_PATHS="/compose-files/docker-compose.yml,/app/compose-files/docker-compose_test.yml"
+  -e DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name
+  -e REDACTED_ZIP_FILE_PASSWORD=your_redacted_file_password
+  -e API_KEY=your_random_api_key
+  -e API_PORT=51763 # Optional, To override the default
+  -e BASIC_AUTH_USER=your_user_name
+  -e BASIC_AUTH_PASS=your_user_password
+  -e DEFAULT_WEB_PAGE_BACKGROUND_COLOR=scarlet #Optional
+  -e DEFAULT_WEB_PAGE_ACCENT_COLOR=gray #Optional
+  -e DEFAULT_WEB_PAGE_TEXT_COLOR=white #Optional
+  -e DEFAULT_WEB_PAGE_FONT_NAME=roboto #Optional
+  -e DEFAULT_WEB_PAGE_FONT_SIZE=medium #Optional
+  -p 8080:8080 \
+  -p 51763:51763 \
   -v /path/to/compose/files:/compose-files \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
   --health-cmd="/app/healthcheck.sh" \
   --health-interval=60s \
   --health-timeout=10s \
@@ -148,12 +165,18 @@ Default user password: P@55w0rd
 ```
 ![service_info_web](./docs/service_info_web.png)
 
-# To Do
+## Additional screen shots
+[View screenshots](./docs/)
+
+# **To Do**
 
 [Table of Contents](#table-of-contents)
 
 - ✅ Support multiple docker-compose.yml files.
 - ❌ Auto scan a directory and subdirectories for docker-compose.yml files.
+- ❌ Native https support.
+- ✅ Security vulnerability scans with trivy and codeql
+- ✅ Code and performance improvements with pylint and cProfile/snakeviz
 - 🔲 Investigate arm64 image.
 - 🔲 Investigate supporting behind an https proxy.
 
@@ -162,6 +185,31 @@ Legend
 - ❌ This task is not being pursued.
 - 🔲 This task is yet to be done.
 - 🔜 This task is in progress.
+
+## **Security Vulnerabilities**
+
+[Table of Contents](#table-of-contents)
+
+There are no known security vulnerabilities in the image as of 9/2/2023.
+
+```
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy image ghcr.io/samcro1967/docker-compose-ports-dump:latest
+
+2023-09-02T13:38:06.848Z        INFO    Vulnerability scanning is enabled
+2023-09-02T13:38:06.848Z        INFO    Secret scanning is enabled
+2023-09-02T13:38:06.848Z        INFO    If your scanning is slow, please try '--scanners vuln' to disable secret scanning
+2023-09-02T13:38:06.848Z        INFO    Please see also https://aquasecurity.github.io/trivy/v0.45/docs/scanner/secret/#recommendation for faster secret detection
+2023-09-02T13:38:11.825Z        INFO    Detected OS: alpine
+2023-09-02T13:38:11.825Z        INFO    Detecting Alpine vulnerabilities...
+2023-09-02T13:38:11.828Z        INFO    Number of language-specific files: 3
+2023-09-02T13:38:11.828Z        INFO    Detecting gobinary vulnerabilities...
+2023-09-02T13:38:11.833Z        INFO    Detecting python-pkg vulnerabilities...
+
+ghcr.io/samcro1967/docker-compose-ports-dump:latest (alpine 3.18.3)
+=============================================================================
+Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+```
+
 
 # **License**
 

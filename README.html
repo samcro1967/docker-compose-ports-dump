@@ -7,6 +7,7 @@
 <li><a href="#installation">Installation</a></li>
 <li><a href="#local-usage-instructions">Local Usage Instructions</a></li>
 <li><a href="#to-do">To DO</a></li>
+<li><a href="#security-vulnerabilities">Security Vulnerabilities</a></li>
 <li><a href="#license">License</a></li>
 <li><a href="#acknowledgements">Acknowledgements</a></li>
 </ul>
@@ -53,28 +54,36 @@
 <h3>Run this command to generate your own random API_KEY</h3>
 <pre><code>cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 24 ; echo
 </code></pre>
+<h3>Accepted values for DEFAULT_WEB_PAGE variables can be found in dcpd_config_example.py</h3>
 <h3><strong>Docker Compose</strong></h3>
 <pre><code>  dcpd:
     hostname: dcpd
     image: ghcr.io/samcro1967/docker_compose_ports_dump:latest
     container_name: dcpd
     environment:
-      - TZ=${TZ}
+      - TZ=your_time_zone
       - PUID=1000
       - PGID=1000
       - CRON_SCHEDULE=*/15 * * * *
       - DOCKER_COMPOSE_FILE_PATHS=&quot;/compose-files/docker-compose.yml,/app/compose-files/docker-compose_test.yml&quot;
-      - DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name #Optional
-      - DEFAULT_DCPD_USERNAME=your_user_name #Optional
-      - DEFAULT_DCPD_PASSWORD=your_user_password #Optional
-      - REDACTED_ZIP_FILE_PASSWORD=P@55w0rd #Optional
+      - DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name
+      - REDACTED_ZIP_FILE_PASSWORD=your_redacted_file_password
       - API_KEY=your_random_api_key
+      - API_PORT=51763 # Optional, To override the default
+      - BASIC_AUTH_USER=your_user_name
+      - BASIC_AUTH_PASS=your_user_password
+	  - DEFAULT_WEB_PAGE_BACKGROUND_COLOR=scarlet #Optional
+      - DEFAULT_WEB_PAGE_ACCENT_COLOR=gray #Optional
+      - DEFAULT_WEB_PAGE_TEXT_COLOR=white #Optional
+      - DEFAULT_WEB_PAGE_FONT_NAME=roboto #Optional
+      - DEFAULT_WEB_PAGE_FONT_SIZE=medium #Optional
     ports:
-      - &quot;80:80&quot;
-      - &quot;81:81&quot;
+      - &quot;8080:8080&quot;
+      - &quot;51763:51763&quot; # External and Internal ports must be the same and match API_PORT if set
     volumes:
       # root of folder where all docker compose folder reside
       - /path/to/compose/files:/compose-files
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     healthcheck:
       test: /app/healthcheck.sh
       interval: 60s
@@ -86,19 +95,26 @@
 <pre><code>docker run \
   --hostname dcpd \
   --name dcpd \
-  -e TZ=${TZ} \
+  -e TZ=your_time_zone \
   -e PUID=1000 \
   -e PGID=1000 \
-  -e CRON_SCHEDULE='*/15 * * * *' \
-  -e DOCKER_COMPOSE_FILE_PATHS=&quot;/compose-files/docker-compose.yml,/compose-files/docker-compose_test.yml&quot; \
-  -e DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name \
-  -e DEFAULT_DCPD_USERNAME=your_user_name \
-  -e DEFAULT_DCPD_PASSWORD=your_user_password \
-  -e REDACTED_ZIP_FILE_PASSWORD=P@55w0rd \
-  -e API_KEY=your_random_api_key \
-  -p 80:80 \
-  -p 81:81 \
+  -e CRON_SCHEDULE=*/15 * * * *
+  -e DOCKER_COMPOSE_FILE_PATHS=&quot;/compose-files/docker-compose.yml,/app/compose-files/docker-compose_test.yml&quot;
+  -e DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name
+  -e REDACTED_ZIP_FILE_PASSWORD=your_redacted_file_password
+  -e API_KEY=your_random_api_key
+  -e API_PORT=51763 # Optional, To override the default
+  -e BASIC_AUTH_USER=your_user_name
+  -e BASIC_AUTH_PASS=your_user_password
+  -e DEFAULT_WEB_PAGE_BACKGROUND_COLOR=scarlet #Optional
+  -e DEFAULT_WEB_PAGE_ACCENT_COLOR=gray #Optional
+  -e DEFAULT_WEB_PAGE_TEXT_COLOR=white #Optional
+  -e DEFAULT_WEB_PAGE_FONT_NAME=roboto #Optional
+  -e DEFAULT_WEB_PAGE_FONT_SIZE=medium #Optional
+  -p 8080:8080 \
+  -p 51763:51763 \
   -v /path/to/compose/files:/compose-files \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
   --health-cmd=&quot;/app/healthcheck.sh&quot; \
   --health-interval=60s \
   --health-timeout=10s \
@@ -130,12 +146,17 @@ Default user password: P@55w0rd
 Default user password: P@55w0rd
 </code></pre>
 <p><img src="./docs/service_info_web.png" alt="service_info_web" /></p>
+<h2>Additional screen shots</h2>
+<p><a href="./docs/">View screenshots</a></p>
 <h1>
-<a id="to-do" href="#to-do"></a>To Do</h1>
+<a id="to-do" href="#to-do"></a><strong>To Do</strong></h1>
 <p><a href="#table-of-contents">Table of Contents</a></p>
 <ul>
 <li>✅ Support multiple docker-compose.yml files.</li>
 <li>❌ Auto scan a directory and subdirectories for docker-compose.yml files.</li>
+<li>❌ Native https support.</li>
+<li>✅ Security vulnerability scans with trivy and codeql</li>
+<li>✅ Code and performance improvements with pylint and cProfile/snakeviz</li>
 <li>🔲 Investigate arm64 image.</li>
 <li>🔲 Investigate supporting behind an https proxy.</li>
 </ul>
@@ -146,6 +167,25 @@ Default user password: P@55w0rd
 <li>🔲 This task is yet to be done.</li>
 <li>🔜 This task is in progress.</li>
 </ul>
+<h2><strong>Security Vulnerabilities</strong></h2>
+<p><a href="#table-of-contents">Table of Contents</a></p>
+<p>There are no known security vulnerabilities in the image as of 9/2/2023.</p>
+<pre><code>docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy image ghcr.io/samcro1967/docker-compose-ports-dump:latest
+
+2023-09-02T13:38:06.848Z        INFO    Vulnerability scanning is enabled
+2023-09-02T13:38:06.848Z        INFO    Secret scanning is enabled
+2023-09-02T13:38:06.848Z        INFO    If your scanning is slow, please try '--scanners vuln' to disable secret scanning
+2023-09-02T13:38:06.848Z        INFO    Please see also https://aquasecurity.github.io/trivy/v0.45/docs/scanner/secret/#recommendation for faster secret detection
+2023-09-02T13:38:11.825Z        INFO    Detected OS: alpine
+2023-09-02T13:38:11.825Z        INFO    Detecting Alpine vulnerabilities...
+2023-09-02T13:38:11.828Z        INFO    Number of language-specific files: 3
+2023-09-02T13:38:11.828Z        INFO    Detecting gobinary vulnerabilities...
+2023-09-02T13:38:11.833Z        INFO    Detecting python-pkg vulnerabilities...
+
+ghcr.io/samcro1967/docker-compose-ports-dump:latest (alpine 3.18.3)
+=============================================================================
+Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+</code></pre>
 <h1>
 <a id="license" href="#license"></a><strong>License</strong></h1>
 <p><a href="#table-of-contents">Table of Contents</a></p>

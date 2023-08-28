@@ -1,38 +1,44 @@
-# dcpd_output.py
-# This file contains functions to generate a web page with the port mappings from the parsed docker-compose.yml file.
+"""
+dcpd_output.py - Module for generating and managing output data in Docker Compose Ports Dump (DCPD) tool.
+
+This module provides functions to generate various output formats and manage cached data for the DCPD tool. It includes
+utilities for creating a web page, fetching software versions, and validating cached data.
+
+Functions:
+- fetch_versions(args) -> dict: Fetches current and latest software versions from a specified base URL.
+- is_cache_valid(cached_data: dict, args) -> bool: Checks if cached data is still valid.
+- generate_pretty_web_page(cursor, args): Generates a pretty web page for displaying port mapping data.
+- is_valid_background_theme(theme_name: str, args) -> bool: Checks if the provided background theme name is valid.
+- generate_web_page_with_template(output_file: str, template: str, template_data: dict): Generates a web page using a template and data.
+- write_to_cache(data: dict): Writes data to the cache file.
+- read_from_cache() -> dict: Reads data from the cache file.
+
+"""
 
 import sys
-
-# Add config to the sys path
-sys.path.append('../config')
-
-import ast
-import csv
-import datetime
-import dcpd_config as dcpd_config
-import dcpd_log_debug as dcpd_log_debug
-import dcpd_log_info as dcpd_log_info
-import dcpd_utils as dcpd_utils
-import importlib.util
 import json
 import os
 import re
-import pkg_resources
-import pkgutil
-import requests
 import sqlite3
-import subprocess
-import sysconfig
-import time
 from typing import List, Tuple, Any
-import psutil
+import csv
+import datetime
+import requests
 
+# Add config to the sys path
+# pylint: disable=wrong-import-position
+sys.path.extend(['.', '../config'])
+
+# Third-party imports (if any)
+import dcpd_config
+import dcpd_log_debug
+import dcpd_log_info
+
+# pylint: disable=R0914,R0913,C0103
 # Using the variables from config.py
 default_docker_compose_file = dcpd_config.DEFAULT_DOCKER_COMPOSE_FILE
 default_vpn_container_name = dcpd_config.DEFAULT_VPN_CONTAINER_NAME
 default_output_html_file_name = dcpd_config.DEFAULT_OUTPUT_HTML_FILE_NAME
-default_web_page_background_color = dcpd_config.DEFAULT_WEB_PAGE_BACKGROUND_COLOR
-default_web_page_text_color = dcpd_config.DEFAULT_WEB_PAGE_TEXT_COLOR
 default_sort_order = dcpd_config.DEFAULT_SORT_ORDER
 default_debug_mode=dcpd_config.DEFAULT_DEBUG_MODE
 location_cache_hours=dcpd_config.LOCATION_CACHE_HOURS
@@ -49,58 +55,100 @@ CACHE_DURATION = datetime.timedelta(hours=location_cache_hours)  # Cache data fo
 # Create an alias for convenience
 logger_info = dcpd_log_info.logger
 logger_debug = dcpd_log_debug.logger
+api_port=dcpd_config.API_PORT
 
 # -------------------------------------------------------------------------
-def is_valid_background_theme(theme_name: str, args) -> bool:
+def are_webpage_configurations_valid(args) -> bool:
     """
-    Checks if the provided background theme name is valid.
+    Checks if the provided web page configurations sourced from dcpd_config are valid.
 
     Args:
-    - theme_name (str): The name of the background theme to be checked.
     - args (object): An argument object with a 'verbose' attribute determining the verbosity.
 
     Returns:
-    bool: True if the theme name is valid, False otherwise.
+    bool: True if all configurations are valid, False otherwise.
 
     Notes:
     - Logs the validity check result to the debug log file.
     - Outputs to the console when 'args.verbose' is set to True.
     """
-    
-    entry_msg = f"Starting the validity check for background theme: {theme_name}."
+
+    entry_msg = "Starting the validation for web page configurations."
     logger_info.info(entry_msg)
     if args.verbose:
         print(entry_msg)
 
-    # List of valid background themes
-    valid_themes = [
-        "hotpink",
-        "cyan",
-        "teal",
-        "orange",
-        "purple",
-        "lime",
-        "magenta",
-        "navy",
-        "olive",
-        "steelblue",
-        "scarlet",
-        "grey"
-    ]
-
-    if theme_name.lower() in valid_themes:
-        success_msg = f"Background theme {theme_name} is valid."
-        logger_debug.debug(success_msg)
+    # Check background color
+    if not dcpd_config.DEFAULT_WEB_PAGE_BACKGROUND_COLOR.lower() in dcpd_config.WEB_COLOR_MAP:
+        msg = "Background color %s is invalid." % dcpd_config.DEFAULT_WEB_PAGE_BACKGROUND_COLOR
+        logger_info.error(msg)
         if args.verbose:
-            print(success_msg)
-        return True
-    else:
-        failure_msg = f"Background theme {theme_name} is invalid."
-        logger_debug.debug(failure_msg)
-        if args.verbose:
-            print(failure_msg)
+            print(msg)
         return False
 
+    # Check accent color
+    if not dcpd_config.DEFAULT_WEB_PAGE_ACCENT_COLOR.lower() in dcpd_config.WEB_COLOR_MAP:
+        msg = "Accent color %s is invalid." % dcpd_config.DEFAULT_WEB_PAGE_ACCENT_COLOR
+        logger_info.error(msg)
+        if args.verbose:
+            print(msg)
+        return False
+
+    # Check text color
+    if not dcpd_config.DEFAULT_WEB_PAGE_TEXT_COLOR.lower() in dcpd_config.WEB_COLOR_MAP:
+        msg = "Text color %s is invalid." % dcpd_config.DEFAULT_WEB_PAGE_TEXT_COLOR
+        logger_info.error(msg)
+        if args.verbose:
+            print(msg)
+        return False
+
+    # Check font name
+    if not dcpd_config.DEFAULT_WEB_PAGE_FONT_NAME.lower() in dcpd_config.FONT_CHOICES:
+        msg = "Font name %s is invalid." % dcpd_config.DEFAULT_WEB_PAGE_FONT_NAME
+        logger_info.error(msg)
+        if args.verbose:
+            print(msg)
+        return False
+
+    # Validate font size
+    if not dcpd_config.DEFAULT_WEB_PAGE_FONT_SIZE in dcpd_config.FONT_SIZE_MAP.keys():
+        msg = "Font size %s is invalid." % dcpd_config.DEFAULT_WEB_PAGE_FONT_SIZE
+        logger_info.error(msg)
+        if args.verbose:
+            print(msg)
+        return False
+
+    # Log and print configurations
+    config_msg = """
+    Configurations being used:
+    - Background Color: {bg_color}
+    - Accent Color: {accent_color}
+    - Text Color: {text_color}
+    - Font Name: {font_name}
+    - Font Size: {font_size}
+    """.format(
+        bg_color=dcpd_config.DEFAULT_WEB_PAGE_BACKGROUND_COLOR,
+        accent_color=dcpd_config.DEFAULT_WEB_PAGE_ACCENT_COLOR,
+        text_color=dcpd_config.DEFAULT_WEB_PAGE_TEXT_COLOR,
+        font_name=dcpd_config.DEFAULT_WEB_PAGE_FONT_NAME,
+        font_size=dcpd_config.DEFAULT_WEB_PAGE_FONT_SIZE
+    )
+    
+    logger_info.info(config_msg.strip())
+    if args.verbose:
+        print(config_msg)
+
+    success_msg = "All web page configurations are valid."
+    logger_info.info(success_msg)
+    if args.verbose:
+        print(success_msg)
+
+    exit_msg = "Validation for web page configurations completed."
+    logger_info.info(exit_msg)
+    if args.verbose:
+        print(exit_msg)
+
+    return True
 
 # -------------------------------------------------------------------------
 def generate_table_rows(ports_data: List[Tuple[str, Any]], args) -> str:
@@ -152,12 +200,13 @@ def generate_table_rows(ports_data: List[Tuple[str, Any]], args) -> str:
         logger_info.info(success_msg)
         if args.verbose:
             print(success_msg)
-            
-    except Exception as e:
-        error_msg = f"Error while generating table rows: {e}"
+
+    except (ValueError, IndexError, KeyError) as error:
+        error_msg = f"Error while generating table rows: {error}"
         logger_info.error(error_msg)
         if args.verbose:
             print(error_msg)
+        return ""  # Return an empty string to indicate failure and prevent unexpected output
 
     return rows.strip()  # Remove any trailing newline characters
 
@@ -178,14 +227,14 @@ def generate_csv(data: List[Tuple[str, Any]], csv_file_path: str, args) -> None:
     - Logs the process of generating a CSV file to the debug log file.
     - Outputs to the console when 'args.verbose' is set to True.
     """
-    
+
     entry_msg = "Starting CSV file generation."
     logger_info.info(entry_msg)
     if args.verbose:
         print(entry_msg)
 
     try:
-        with open(csv_file_path, 'w', newline='') as file:
+        with open(csv_file_path, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=',', quoting=csv.QUOTE_ALL)
 
             # Write header without quotes
@@ -197,25 +246,25 @@ def generate_csv(data: List[Tuple[str, Any]], csv_file_path: str, args) -> None:
 
                 # Convert 0 to False and 1 to True for the 'has_port_mapping' column
                 has_port_mapping = "True" if has_port_mapping else "False"
-                
+
                 # Convert NULL/None values to "None"
                 external_port = "None" if external_port is None else external_port
                 internal_port = "None" if internal_port is None else internal_port
 
                 # Write the row
                 writer.writerow([service_name, external_port, internal_port, has_port_mapping, mapped_app])
-            
+
             success_msg = f"CSV file successfully generated at {csv_file_path}."
             logger_info.info(success_msg)
             if args.verbose:
                 print(success_msg)
 
-    except Exception as e:
-        error_msg = f"Error during CSV file generation: {e}"
+    except (FileNotFoundError, PermissionError, csv.Error) as error:
+        error_msg = f"Error during CSV file generation: {error}"
         logger_info.error(error_msg)
         if args.verbose:
             print(error_msg)
-            
+
 # -------------------------------------------------------------------------
 def generate_pretty_web_page(cursor: sqlite3.Cursor, args) -> None:
     """
@@ -230,17 +279,21 @@ def generate_pretty_web_page(cursor: sqlite3.Cursor, args) -> None:
     Returns:
         None
     """
-    
     logger_info.info("Generate Web Page")
+
+    # Validate web page variable configurations are valid
+    if not are_webpage_configurations_valid(args):
+        logger_info.error("Invalid web page configurations. Exiting...")
+        exit()
 
     # Generate json file with variables for reading into JavaScript
     generate_output_json(args)
-    
+
     # Get the current timestamp without seconds
     current_timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
     # Read the content of html_template_file as the template
-    with open(html_template_file, 'r') as template_file:
+    with open(html_template_file, 'r', encoding='utf-8') as template_file:
         html_content = template_file.read()
 
     # Replace placeholders for file name and timestamp in the HTML content
@@ -248,24 +301,10 @@ def generate_pretty_web_page(cursor: sqlite3.Cursor, args) -> None:
     html_content = html_content.replace("{{timestamp}}", str(current_timestamp))
 
     # Update the version in the template to the current version
-    version_pattern = r'(<div class="version-info">Version: )(v[\d.]+)(</div>)'
-
-    # Find matches for the version pattern
-    matches = re.findall(version_pattern, html_content)
-
-    # If in verbose mode, print matched versions and the updated version
-    if args.verbose and matches:
-        for match in matches:
-            print(f"Original Matched Version: {match[1]}")
-            print(f"Updated Version: {version}")
+    version_pattern = re.compile(r'(<div class="version-info">Version: )(v[\d.]+)(</div>)')
 
     # Substitute the matched version with the updated version
-    new_html_content = re.sub(version_pattern, r'\1' + version + r'\3', html_content)
-
-    # Write the updated HTML content back to the file
-    with open(html_template_file, 'w') as file_handle:  # Changed 'file' to 'file_handle' for clarity
-        file_handle.write(new_html_content)
-
+    html_content = version_pattern.sub(r'\1' + version + r'\3', html_content)
 
     # Fetch the port mapping data from docker.db using the provided cursor
     cursor.execute("SELECT service_name, external_port, internal_port, has_port_mapping, mapped_app FROM service_info")
@@ -281,20 +320,21 @@ def generate_pretty_web_page(cursor: sqlite3.Cursor, args) -> None:
     html_content = html_content.replace("<!-- Add a hidden placeholder row -->", rows)
 
     # Call the function to remove the placeholder row from the generated HTML content
-    updated_html_content = remove_placeholder_row(html_content, args)
+    html_content = remove_placeholder_row(html_content, args)
 
     # Write the updated HTML content to the output HTML file
-    with open(default_output_html_file, 'w') as output_file:
-        output_file.write(updated_html_content)
+    with open(default_output_html_file, 'w', encoding='utf-8') as output_file:
+        output_file.write(html_content)
 
     logger_info.info("Finished generating and writing web page.")
+
 
 # -------------------------------------------------------------------------
 def remove_placeholder_row(html_content: str, args) -> str:
     """
     Removes the placeholder row from the provided HTML content.
 
-    This function identifies a placeholder row within the HTML content using a specific 
+    This function identifies a placeholder row within the HTML content using a specific
     pattern, removes it, and returns the updated content.
 
     Args:
@@ -316,10 +356,10 @@ def remove_placeholder_row(html_content: str, args) -> str:
 
     try:
         # Define the regex pattern for the placeholder row
-        placeholder_row_pattern = (r"<tr>\s*<td>{{ row\[\"Service Name\"\] }}</td>\s*<td>{{ "
-                                   "row\[\"External Port\"\] }}</td>\s*<td>{{ row\[\"Internal Port\"\] }}</td>"
-                                   "\s*<td>{{ row\[\"Port Mapping\"\] }}</td>\s*<td>{{ row\[\"Mapped App\"\] }}</td>\s*</tr>")
-        
+        placeholder_row_pattern = r"""<tr>\s*<td>{{ row["Service Name"] }}</td>\s*<td>{{
+                                   row["External Port"] }}</td>\s*<td>{{ row["Internal Port"] }}</td>
+                                   \s*<td>{{ row["Port Mapping"] }}</td>\s*<td>{{ row["Mapped App"] }}</td>\s*</tr>"""
+
         # Remove the placeholder row from the HTML content
         updated_content = re.sub(placeholder_row_pattern, "", html_content)
 
@@ -330,13 +370,13 @@ def remove_placeholder_row(html_content: str, args) -> str:
 
         return updated_content
 
-    except Exception as e:
-        error_msg = f"Error during placeholder row removal: {e}"
+    except re.error as error:
+        error_msg = f"Error during placeholder row removal: {error}"
         logger_info.error(error_msg)
         if args.verbose:
             print(error_msg)
 
-        return html_content  # Return the original content in case of an error
+        return html_content  # Return the original content in case of a regex error
 
 # -------------------------------------------------------------------------
 def generate_output_json(args) -> None:
@@ -354,12 +394,12 @@ def generate_output_json(args) -> None:
     Notes:
     - Handles logging of various events and outputs to the console based on verbosity.
     """
-    
+
     entry_msg = "Starting: generate_output_json"
     logger_info.info(entry_msg)
     if args.verbose:
         print(entry_msg)
-    
+
     try:
         # Load cached data
         logger_debug.debug("Loading cached data...")
@@ -369,17 +409,17 @@ def generate_output_json(args) -> None:
             location_data = cached_data
             logger_info.info("Using valid cached data.")
         else:
-            location_response = requests.get('https://ipinfo.io/json')
+            location_response = requests.get('https://ipinfo.io/json', timeout=10)
             location_data = location_response.json()
             logger_info.info("Fetched new location data.")
-            
+
             # Cache the fetched data
             location_data["timestamp"] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             save_cached_data(location_data, args)
 
         # Extract latitude and longitude
         latitude, longitude = location_data['loc'].split(',')
-        logger_debug.debug(f"Latitude: {latitude}, Longitude: {longitude}")
+        logger_debug.debug("Latitude: %s, Longitude: %s", latitude, longitude)
 
         # Fetch weather information for the location
         weather_response = requests.get(f'https://wttr.in/{latitude},{longitude}?format=%t', timeout=5)
@@ -395,7 +435,6 @@ def generate_output_json(args) -> None:
     versions = fetch_versions(args)
     last_updated = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     temperature_C_formatted = f"+{temperature_C}°C"
-    perf_data = get_system_info(args)
 
     output_data = {
         'location': location,
@@ -404,18 +443,22 @@ def generate_output_json(args) -> None:
         'last_updated': last_updated,
         'html_file_name': default_output_html_file,
         'background_color': dcpd_config.WEB_COLOR_MAP.get(dcpd_config.DEFAULT_WEB_PAGE_BACKGROUND_COLOR, dcpd_config.DEFAULT_WEB_PAGE_BACKGROUND_COLOR),
+        'accent_color': dcpd_config.WEB_COLOR_MAP.get(dcpd_config.DEFAULT_WEB_PAGE_ACCENT_COLOR, dcpd_config.DEFAULT_WEB_PAGE_ACCENT_COLOR),
         'text_color': dcpd_config.WEB_COLOR_MAP.get(dcpd_config.DEFAULT_WEB_PAGE_TEXT_COLOR, dcpd_config.DEFAULT_WEB_PAGE_TEXT_COLOR),
+        'font_name': dcpd_config.FONT_CHOICES.get(dcpd_config.DEFAULT_WEB_PAGE_FONT_NAME, dcpd_config.DEFAULT_WEB_PAGE_FONT_NAME),
+        'font_link': dcpd_config.FONT_LINK_MAP.get(dcpd_config.DEFAULT_WEB_PAGE_FONT_NAME, dcpd_config.DEFAULT_WEB_PAGE_FONT_NAME),
+        'font_size': dcpd_config.FONT_SIZE_MAP.get(dcpd_config.DEFAULT_WEB_PAGE_FONT_SIZE, dcpd_config.DEFAULT_WEB_PAGE_FONT_SIZE),
+        #'font_size': dcpd_config.DEFAULT_WEB_PAGE_FONT_SIZE,
         'current_version': versions.get("current-version", "N/A"),
         'latest_version': versions.get("latest-version", "N/A")
     }
 
-    output_data.update(perf_data)
-    logger_debug.debug(f"Prepared output data: {output_data}")
+    logger_debug.debug("Prepared output data: %s", output_data)
 
     # Save the data to a JSON file
-    with open(output_json_file, 'w') as json_file:
+    with open(output_json_file, 'w', encoding='utf-8') as json_file:
         json.dump(output_data, json_file)
-    
+
     exit_msg = "Completed: generate_output_json"
     logger_info.info(exit_msg)
     if args.verbose:
@@ -446,11 +489,11 @@ def get_temperature_in_celsius(temperature_F: str, args) -> str:
         logger_info.info(exit_msg)
         if args.verbose:
             print(exit_msg)
-        
+
         return f"{round(temperature_C)}"
 
-    except ValueError as e:
-        error_msg = f"Error converting temperature: {e}"
+    except ValueError as error:
+        error_msg = f"Error converting temperature: {error}"
         logger_info.error(error_msg)
         if args.verbose:
             print(error_msg)
@@ -474,9 +517,9 @@ def load_cached_data(args) -> dict:
     logger_info.info(entry_msg)
     if args.verbose:
         print(entry_msg)
-    
+
     try:
-        with open(CACHE_FILE, "r") as cache_file:
+        with open(CACHE_FILE, "r", encoding='utf-8') as cache_file:
             cached_data = json.load(cache_file)
 
             success_msg = "Cached data loaded successfully."
@@ -484,7 +527,7 @@ def load_cached_data(args) -> dict:
             if args.verbose:
                 print(success_msg)
                 print("Cached Data:", cached_data)  # Display cached data in verbose mode
-            
+
             return cached_data
 
     except (FileNotFoundError, json.JSONDecodeError):
@@ -507,9 +550,9 @@ def save_cached_data(data: dict, args) -> None:
     logger_info.info(entry_msg)
     if args.verbose:
         print(entry_msg)
-    
+
     try:
-        with open(CACHE_FILE, "w") as cache_file:
+        with open(CACHE_FILE, "w", encoding='utf-8') as cache_file:
             json.dump(data, cache_file)
 
         success_msg = "Data saved to cache file successfully."
@@ -517,8 +560,13 @@ def save_cached_data(data: dict, args) -> None:
         if args.verbose:
             print(success_msg)
 
-    except Exception as e:
-        error_msg = f"Error saving data to cache file: {e}"
+    except OSError as os_error:
+        error_msg = f"Error saving data to cache file: {os_error}"
+        logger_info.error(error_msg)
+        if args.verbose:
+            print(error_msg)
+    except json.JSONDecodeError as json_error:
+        error_msg = f"Error saving data to cache file: {json_error}"
         logger_info.error(error_msg)
         if args.verbose:
             print(error_msg)
@@ -556,15 +604,15 @@ def is_cache_valid(cached_data: dict, args) -> bool:
             if args.verbose:
                 print(valid_msg)
             return True
-        else:
-            expired_msg = "Cached data has expired."
-            logger_info.info(expired_msg)
-            if args.verbose:
-                print(expired_msg)
-            return False
 
-    except Exception as e:
-        error_msg = f"Error checking cache validity: {e}"
+        expired_msg = "Cached data has expired."
+        logger_info.info(expired_msg)
+        if args.verbose:
+            print(expired_msg)
+        return False
+
+    except ValueError as value_error:
+        error_msg = f"ValueError checking cache validity: {value_error}"
         logger_info.error(error_msg)
         if args.verbose:
             print(error_msg)
@@ -575,8 +623,8 @@ def fetch_versions(args) -> dict:
     """
     Fetch the current and latest software versions from the specified base URL.
 
-    Tries to fetch version data for 'current-version' and 'latest-version' 
-    endpoints. If an error occurs during the fetch, logs the error and sets 
+    Tries to fetch version data for 'current-version' and 'latest-version'
+    endpoints. If an error occurs during the fetch, logs the error and sets
     the version to "N/A" for that endpoint.
 
     Args:
@@ -585,97 +633,41 @@ def fetch_versions(args) -> dict:
     Returns:
         dict: Contains fetched 'current-version' and 'latest-version' or "N/A" if an error occurred.
     """
-    
-    base_url = "http://localhost:81/api/proxy/"
+
+    base_url = f"http://localhost:{api_port}/api/proxy/version/"
     endpoints = ["current-version", "latest-version"]
     version_data = {}
 
     for endpoint in endpoints:
         try:
-            response = requests.get(base_url + endpoint)
+            response = requests.get(base_url + endpoint, timeout=10)  # Set a timeout value in seconds
             response_content = response.content.decode('utf-8')
 
             info_msg = f"Fetched {endpoint}: {response_content}"
-            logger_info.info(info_msg)
+            logger_debug.info(info_msg)
             if args.verbose:
                 print(info_msg)
-            
+
             if response.status_code == 200:
                 version_data[endpoint] = response.json().get("version", "N/A")
             else:
                 error_msg = f"Error fetching {endpoint}. Response Code: {response.status_code}. Response: {response_content}"
-                logger_info.error(error_msg)
+                logger_info.info(error_msg)
                 if args.verbose:
                     print(error_msg)
-                
-        except requests.RequestException as re:
-            error_msg = f"RequestException fetching {endpoint}: {re}"
+
+        except requests.RequestException as request_exception:
+            error_msg = f"RequestException fetching {endpoint}: {request_exception}"
             logger_info.error(error_msg)
             if args.verbose:
                 print(error_msg)
             version_data[endpoint] = "N/A"
-            
-        except Exception as e:
-            error_msg = f"Exception fetching {endpoint}: {e}"
+
+        except json.JSONDecodeError as json_decode_error:
+            error_msg = f"JSONDecodeError fetching {endpoint}: {json_decode_error}"
             logger_info.error(error_msg)
             if args.verbose:
                 print(error_msg)
             version_data[endpoint] = "N/A"
 
     return version_data
-
-# -------------------------------------------------------------------------
-def get_system_info(args) -> dict:
-    """
-    Fetch the current CPU and memory utilization of the system.
-
-    Retrieves the CPU and memory utilization and returns the data 
-    as a dictionary, which contains utilization percentages and 
-    total, used, and available memory values.
-
-    Args:
-        args (object): An argument object with a 'verbose' attribute for controlling verbosity.
-
-    Returns:
-        dict: Contains CPU and memory utilization data.
-    """
-
-    entry_msg = "Entering get_system_info() function..."
-    logger_info.info(entry_msg)
-    if args.verbose:
-        print(entry_msg)
-
-    try:
-        cpu_percent = psutil.cpu_percent(interval=1)
-        memory_info = psutil.virtual_memory()
-        system_info = {
-            "cpu_percent": cpu_percent,
-            "total_memory": memory_info.total,
-            "used_memory": memory_info.used,
-            "available_memory": memory_info.available,
-            "memory_percent": memory_info.percent,
-            "perf_timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-
-        logger_debug.debug(f"System Info: {system_info}")
-
-        exit_msg = "Exiting get_system_info() function with data retrieved successfully..."
-        logger_info.info(exit_msg)
-        if args.verbose:
-            print(f"System Information: {system_info}")
-            print(exit_msg)
-
-        return system_info
-
-    except Exception as e:
-        error_msg = f"Error fetching system info: {e}"
-        logger_info.error(error_msg)
-        if args.verbose:
-            print(error_msg)
-
-        exit_err_msg = "Exiting get_system_info() function due to an error..."
-        logger_info.error(exit_err_msg)
-        if args.verbose:
-            print(exit_err_msg)
-
-        return {}

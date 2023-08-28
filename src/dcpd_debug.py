@@ -1,34 +1,37 @@
-# dcpd_debug.py
-# This file contains helper functions for displaying debug information
+"""
+dcpd_debug.py
 
-import sys
+Debugging and Reporting Module for Docker Compose Ports Dump
 
-# Add config to the sys path
-sys.path.append('../config')
+This module provides functions to generate comprehensive debug reports, display environment information,
+and output statistics related to Docker Compose Ports Dump. It contains utility functions for printing
+debug informationand formatting data for presentation.
 
-# Import necessary modules
-from colorama import Fore, Style
-from tabulate import tabulate
-from typing import Any, Dict, List, Optional, Tuple
-import ast
-import logging
+"""
+
 import os
 import platform
-import pkg_resources
-import pprint
 import re
 import sqlite3
-from sqlite3 import Cursor, Error
 import subprocess
-import textwrap
-import dcpd_config as dcpd_config
-import dcpd_compose_parser as dcpd_cp
-import dcpd_log_debug as dcpd_log_debug
-import dcpd_log_info as dcpd_log_info
-import dcpd_output as dcpd_output
-import dcpd_utils as dcpd_utils
-import dcpd_pip as dcpd_pip
+from typing import Any, Dict, List, Optional, Tuple
+import sys
+import pkg_resources
+from tabulate import tabulate
 
+# Add config to the sys path
+# pylint: disable=wrong-import-position
+sys.path.extend(['.', '../config'])
+
+# Third-party imports (if any)
+import dcpd_config
+import dcpd_compose_parser as dcpd_cp
+import dcpd_log_debug
+import dcpd_log_info
+import dcpd_pip
+import dcpd_utils
+
+# pylint: disable=R0914,R0913
 # Variables from dcpd_config.py
 import dcpd_arguments_parser as dcpd_ap
 default_docker_compose_file = dcpd_config.DEFAULT_DOCKER_COMPOSE_FILE
@@ -54,18 +57,24 @@ args = dcpd_ap.parse_arguments()
 # Modify the path for files
 debug_txt = os.path.join("..", "data", "dcpd_debug.txt")
 
+# Global map for special cases where module name and pip package name differ
+module_to_package_map = {
+    "yaml": "PyYAML",
+    "markdown_it": "markdown-it-py",
+}
+
 # -------------------------------------------------------------------------
 def generate_debug_info(cursor: Any, verbose: bool = False) -> Tuple[Dict[str, Any], str, str, List[str]]:
     """
     Generate debug information for troubleshooting purposes.
-    
+
     Parameters
     ----------
     cursor : Any
         A cursor object for executing SQL commands on the database.
     verbose : bool, optional
         Flag to control verbosity of logging, by default False.
-        
+
     Returns
     -------
     Tuple[Dict[str, Any], str, str, List[str]]
@@ -83,7 +92,7 @@ def generate_debug_info(cursor: Any, verbose: bool = False) -> Tuple[Dict[str, A
     debug_info = {
         "environment_data": get_environment_data()
     }
-    
+
     try:
         # Assemble the environment data section
         environment_data_lines = [
@@ -106,13 +115,23 @@ def generate_debug_info(cursor: Any, verbose: bool = False) -> Tuple[Dict[str, A
         ]
 
         # Getting pip version using subprocess
-        pip_version = subprocess.run(["pip", "--version"], capture_output=True, text=True).stdout.strip()
-        
+        pip_version = subprocess.run(["pip", "--version"], capture_output=True, text=True, check=True).stdout.strip()
+
         # Fetching SQLite version
         sqlite_version = cursor.connection.execute('SELECT sqlite_version()').fetchone()[0]
 
         # Convert the port_mappings to a structured list of tuples
         port_mappings = [(row['id'], row['external_port'], row['mapping_values']) for row in port_mappings]
+
+        # Convert module names to package names
+        required_modules = dcpd_pip.get_required_pip_modules(args)
+        required_packages = [module_to_package(module_name, args) for module_name in required_modules]
+
+        # Get versions of the required packages
+        package_versions = get_package_versions(required_packages, args)
+
+        # Sort packages alphabetically ignoring case
+        sorted_packages_with_versions = dict(sorted(package_versions.items(), key=lambda item: item[0].lower()))
 
         # Compiling all debug information into a dictionary
         debug_info.update({
@@ -121,7 +140,7 @@ def generate_debug_info(cursor: Any, verbose: bool = False) -> Tuple[Dict[str, A
             "python_version": platform.python_version(),
             "pip_version": pip_version,
             "sqlite_version": sqlite_version,
-            "installed_packages_list": dcpd_pip.get_required_pip_modules(args),
+            "installed_packages_list": sorted_packages_with_versions,
             "docker_compose_file": default_docker_compose_file,
             "vpn_container_name": default_vpn_container_name,
         })
@@ -134,25 +153,81 @@ def generate_debug_info(cursor: Any, verbose: bool = False) -> Tuple[Dict[str, A
         logger_info.info("Finished generating debug info.")
 
         return debug_info, port_mapping_str, ports_data_str, environment_data_lines
-    
+
     except subprocess.CalledProcessError:
         msg = "Failed to fetch the pip version."
         logger_info.error(msg)
         if verbose:
             print(msg)
         raise
-    except sqlite3.Error as e:
-        msg = f"Database error: {e}"
+    except sqlite3.Error as error:
+        msg = f"Database error: {error}"
         logger_info.error(msg)
         if verbose:
             print(msg)
         raise
-    except Exception as e:
-        msg = f"Unexpected error during debug info generation: {e}"
+    except Exception as error:
+        msg = f"Unexpected error during debug info generation: {error}"
         logger_info.error(msg)
         if verbose:
             print(msg)
         raise
+
+# -------------------------------------------------------------------------
+def module_to_package(module_name: str, cmdline_args) -> str:
+    """
+    Convert a module name to its corresponding package name.
+
+    Parameters:
+    - module_name (str): The name of the module to be converted.
+    - cmdline_args: Parsed command-line arguments.
+
+    Returns:
+    - str: The package name corresponding to the module. If no mapping exists, returns the module name.
+    """
+    logger_debug.info("Function module_to_package() started for module: %s.", module_name)
+    if cmdline_args.verbose:
+        print(f"Function module_to_package() started for module: {module_name}.")
+
+    package_name = module_to_package_map.get(module_name, module_name)
+    logger_debug.debug("Converted %s to %s.", module_name, package_name)
+
+    logger_debug.info("Function module_to_package() completed. Module %s mapped to package %s.", module_name, package_name)
+    if cmdline_args.verbose:
+        print(f"Function module_to_package() completed. Module {module_name} mapped to package {package_name}.")
+
+    return package_name
+
+# -------------------------------------------------------------------------
+def get_package_versions(package_list: list, cmd_args) -> dict:
+    """
+    Get the version numbers of the given packages.
+
+    Parameters:
+    - package_list (list): List of package names to check versions for.
+    - cmd_args: Parsed command-line arguments.
+
+    Returns:
+    - dict: A dictionary where keys are package names and values are their respective versions.
+    """
+    logger_info.info("Function get_package_versions() started.")
+    if cmd_args.verbose:
+        print("Function get_package_versions() started.")
+
+    versions = {}
+    for package in package_list:
+        try:
+            versions[package] = pkg_resources.get_distribution(package).version
+            logger_debug.debug("Package %s version: %s", package, versions[package])
+        except pkg_resources.DistributionNotFound:
+            versions[package] = "Not Installed"
+            logger_debug.debug("Package %s is not installed.", package)
+
+    logger_info.info("Function get_package_versions() completed.")
+    if args.verbose:
+        print("Function get_package_versions() completed.")
+
+    return versions
 
 # -------------------------------------------------------------------------
 def get_environment_data(verbose: bool = False) -> Dict[str, str]:
@@ -183,8 +258,9 @@ def get_environment_data(verbose: bool = False) -> Dict[str, str]:
     # Fetch details about the operating platform.
     system = platform.system()
     release = platform.release()
-    version = platform.version()
-    environment_data["platform_system_alias"] = platform.system_alias(system, release, version)
+    platform_version = platform.version()
+
+    environment_data["platform_system_alias"] = platform.system_alias(system, release, platform_version)
     environment_data["platform_release"] = release
     environment_data["platform_machine"] = platform.machine()
 
@@ -195,18 +271,18 @@ def get_environment_data(verbose: bool = False) -> Dict[str, str]:
         for key in keys_to_include:
             if key in freedesktop_os_data:
                 environment_data[f"freedesktop_{key}"] = freedesktop_os_data[key]
-    except Exception as e:
+    except (FileNotFoundError, NotImplementedError) as error:
         # Handle issues while fetching FreeDesktop OS details.
         for key in keys_to_include:
             environment_data[f"freedesktop_{key}"] = "Not available or failed to fetch"
         if verbose:
-            print(f"Failed to retrieve FreeDesktop OS data: {e}")
+            print(f"Failed to retrieve FreeDesktop OS data: {error}")
 
     # Log environment data for debugging.
     dcpd_utils.log_separator_data(logger_debug)
-    logger_debug.debug(f"Raw environment_data: {environment_data}")
+    logger_debug.debug("Raw environment_data: %s", environment_data)
     dcpd_utils.log_separator_data(logger_debug)
-    
+
     # If verbose flag is set, print the environment data.
     if verbose:
         print("Environment Data:")
@@ -239,7 +315,7 @@ def print_debug_output(debug_info: Dict[str, Any], port_mapping_str: str, ports_
         # - Configuration data sourced from dcpd_config.py
         # - Dependency version information (like Python, pip, SQLite)
         # - Details of installed pip modules
-        
+
         # Constructing the main debug info string:
         # - Information about the configuration setup from dcpd_config.py
         # - Version details of dependencies such as Python, pip, and SQLite
@@ -253,45 +329,48 @@ def print_debug_output(debug_info: Dict[str, Any], port_mapping_str: str, ports_
             f"Default Docker Compose File: {default_docker_compose_file}",
             f"Default VPN Container Name: {default_vpn_container_name}",
             f"Lines per Page: {lines_per_page}",
-            f"Default Report Background Color: {default_web_page_background_color}",
-            f"Default Report Text Color: {default_web_page_text_color}", 
+            f"Default Web Page Background Color: {default_web_page_background_color}",
+            f"Default Web Page Accent Color: {dcpd_config.DEFAULT_WEB_PAGE_ACCENT_COLOR}",
+            f"Default Web Page Text Color: {default_web_page_text_color}",
+            f"Default Web Page Font Name: {dcpd_config.DEFAULT_WEB_PAGE_FONT_NAME}",
+            f"Default Web Page Font Size: {dcpd_config.DEFAULT_WEB_PAGE_FONT_SIZE}",
             f"{debug_report_header_color}\nDependency Versions:{terminal_color_reset}",
             f"Python3: {debug_info['python_version']}",
             f"pip3: {debug_info['pip_version']}",
             f"SQLite: {debug_info['sqlite_version']}",
-            f"{debug_report_header_color}\nPip Modules Versions:{terminal_color_reset}",
+            f"{debug_report_header_color}\nPip Package Versions:{terminal_color_reset}",
             "\n".join(f"{module}: {debug_info['installed_packages_list'][module]}" for module in debug_info['installed_packages_list']),  # Print module name and version
             f"{debug_report_header_color}\nPort Mapping Environment Variables from Docker Compose:{terminal_color_reset}"
         ])
 
         # Combining main debug info with port details
-        combined_debug_str = report_str + port_mapping_str  #+ ports_data_str
+        combined_debug_str = report_str + port_mapping_str + ports_data_str
 
         # Removing ANSI escape sequences
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
         cleaned_debug_str = ansi_escape.sub('', combined_debug_str)
 
         # Writing the debug info to a file
-        with open(debug_txt, 'w') as file:
+        with open(debug_txt, 'w', encoding='utf-8') as file:
             file.write(cleaned_debug_str)
 
         # Control the output display based on the 'display' flag
         if not display:
             if verbose:
                 print("Debug information written to 'dcpd_debug.txt'.")
-            return  
-        elif display:
+            return
+        if display:
             if paginate:
                 dcpd_utils.paginate_output(combined_debug_str)
             else:
                 print(combined_debug_str)
-       
+
         logger_info.info("Finished printing the debug output.")
 
     # Handle interruptions and exceptions
-    except Exception as e:
-        logger_info.error(f"An error occurred during debug output generation: {e}")
-        raise e
+    except Exception as error:
+        logger_info.error("An error occurred during debug output generation: %s", error)
+        raise error
 
 # -------------------------------------------------------------------------
 def generate_port_mapping_str(port_mappings: List[Tuple[int, int, str]], verbose: bool = False) -> str:
@@ -346,8 +425,8 @@ def generate_port_mapping_str(port_mappings: List[Tuple[int, int, str]], verbose
 
         return result
 
-    except Exception as e:
-        logger_info.error(f"Error occurred while generating port mapping string: {e}")
+    except Exception as error:
+        logger_info.error("Error occurred while generating port mapping string: %s", error)
         raise
 
 # -------------------------------------------------------------------------
@@ -397,7 +476,7 @@ def generate_ports_data_str(ports_data: List[Tuple[int, str, Optional[int], Opti
 
         # Formatting the ports data.
         formatted_ports_data = [
-            (idx, service, host if host is not None else "N/A", container if container is not None else "N/A", 
+            (idx, service, host if host is not None else "N/A", container if container is not None else "N/A",
              'True' if flag == 1 else 'False', description)
             for idx, service, host, container, flag, description in sorted_ports_data
         ]
@@ -409,10 +488,10 @@ def generate_ports_data_str(ports_data: List[Tuple[int, str, Optional[int], Opti
 
         # Returning the ports data in a tabulated format.
         return ports_data_header + tabulate(formatted_ports_data, headers=PORTS_DATA_HEADERS, tablefmt='grid', numalign="center", stralign="center")
-    
-    except ValueError as ve:
-        logger_info.error(f"Value Error: {ve}")
+
+    except ValueError as value_error:
+        logger_info.error("Value Error: %s", value_error)
         raise
-    except Exception as e:
-        logger_info.error(f"Unexpected error occurred: {e}")
+    except Exception as error:
+        logger_info.error("Unexpected error occurred: %s", error)
         raise

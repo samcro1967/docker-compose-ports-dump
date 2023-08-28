@@ -1,37 +1,65 @@
 /* dcpd_script.js */
 
 /**
- * This script provides various functionalities:
- * 1. Search functionality for filtering table rows based on user input.
- * 2. CSV Export functionality to allow users to download the table's visible rows as a CSV file.
- * 3. Content Display functionality to toggle between different sections of content.
- * 4. Log Fetch functionality to fetch and display logs.
- * 5. Table Initialization to fetch CSV data and populate the table on page load.
+ * dcpd_script.js
+ * 
+ * The primary script that orchestrates the overall functionalities of the page.
+ * 
+ * Features:
+ * - Initializes content when the DOM is ready.
+ * - Populates tables with CSV data.
+ * - Handles styling and presentation based on dynamic data.
+ * - Provides utilities to display current date-time, update the footer, 
+ *   and check for application updates.
  */
 
 // =========================
 // DOM Initialization
 // =========================
+
 $(document).ready(function () {
-    // Fetch CSV data and populate the table
+    // By default, highlight the "Docker Compose Ports" link
+    const dockerComposeLink = $('#view-ports');
+    if (dockerComposeLink.length) {
+        highlightActiveLink(dockerComposeLink[0]);
+    }
+
+    /**
+     * Fetches data from a CSV file and populates the table on the web page.
+     */
 	fetchAndPopulateTable();
 
-    // Call the function to load and apply the styles
+    /**
+     * Load and apply the styling properties for the web page.
+     * The styles are defined in dcpd_html.json and are applied as CSS Custom Properties.
+     */
     loadWebpageStyles();
 
-    // Show current date and time
+    /**
+     * Display the current date and time on the web page.
+     */
     showDateTime();
 
-    // Update footer with data from dcpd_html.json
+    /**
+     * Update the footer section of the web page.
+     * The data is fetched from dcpd_html.json.
+     */
     updateFooter();
 
-    // Update location and temperature from dcpd_html.json
+    /**
+     * Display the location and temperature data on the web page.
+     * The data is fetched from dcpd_html.json.
+     */
     updateLocationAndTemperature();
 
-    // On document ready, show the ports content by default.
+    /**
+     * By default, when the page loads, the content section that displays port details is shown.
+     */
     showContent('ports-content');
 
-    // Check for updates
+    /**
+     * Checks if there are any updates available for the application.
+     */
     checkForUpdate();
 
 });

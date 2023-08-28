@@ -1,11 +1,41 @@
-# File: dcpd_log_debug.py
+"""
+dcpd_log_debug.py
+
+This module is responsible for setting up and configuring a logger for the Docker Compose Ports Dump (DCPD) application. The logger focuses on debugging messages.
+
+Attributes:
+    max_log_size (int): The maximum size of the log file before it gets rotated.
+    log_retention_count (int): Number of old log files to retain.
+    log_time_format (str): Format for time in log entries.
+    default_log_directory (str): Default directory to store log files.
+    logger (logging.Logger): Logger instance used for debug logging in the DCPD application.
+    log_directory (str): Absolute path to the log directory.
+    log_file (str): Full path to the debug log file.
+    file_handler (RotatingFileHandler): Rotating file handler for log rotation based on size.
+
+Usage:
+    Import this module to get the `logger` instance which is set up and ready to log debug messages for the DCPD application.
+
+Example:
+    from dcpd_log_debug import logger
+    logger.debug("This is a debug message.")
+
+Note:
+    Ensure the configuration in `dcpd_config` is set appropriately before using this logger.
+    Also, the logger does not propagate messages to avoid any duplication in log entries.
+"""
 
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+import sys
+
+# Add config to the sys path
+sys.path.append('../config')
 
 # Custom Modules imports
-import dcpd_config as dcpd_config
+# pylint: disable=wrong-import-position
+import dcpd_config
 
 # Create an alias for convenience
 max_log_size = dcpd_config.MAX_LOG_SIZE

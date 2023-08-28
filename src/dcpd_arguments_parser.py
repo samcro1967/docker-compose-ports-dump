@@ -1,20 +1,38 @@
-# dcpd_arguments_parser.py
+"""
+dcpd_arguments_parser.py
 
-import sys
+This script contains functions for parsing and validating command-line arguments for the Docker Compose Ports Dump (DCPD) utility. It defines argument parsing, validation, and default value setting.
 
-# Add config to the sys path
-sys.path.append('../config')
+Dependencies:
+- sys: Standard library for system-specific parameters and functions.
+- argparse: Library for parsing command-line arguments.
+- os: Standard library for interacting with the operating system.
+- traceback: Standard library for printing exception traceback.
+- dcpd_config: Configuration module containing relevant constants and settings.
+- dcpd_log_debug and dcpd_log_info: Logging modules for debugging and information-level logs.
+- dcpd_utils: Utility functions for various purposes.
+
+Note:
+- Ensure the provided paths in the script are valid and accessible.
+- The script relies on the presence of certain modules, make sure they exist before executing.
+- The script utilizes configuration constants and logging modules for streamlined functionality.
+"""
 
 # Importing standard libraries
+import sys
 import argparse
 import os
 import traceback
 
+# Add config to the sys path
+# pylint: disable=wrong-import-position
+sys.path.append('../config')
+
 # Importing configurations from config module
 import dcpd_config
-import dcpd_log_debug as dcpd_log_debug
-import dcpd_log_info as dcpd_log_info
-import dcpd_utils as dcpd_utils
+import dcpd_log_debug
+import dcpd_log_info
+import dcpd_utils
 
 # Configurations
 default_docker_compose_file = dcpd_config.DEFAULT_DOCKER_COMPOSE_FILE
@@ -23,9 +41,9 @@ default_output_html_file_name = dcpd_config.DEFAULT_OUTPUT_HTML_FILE_NAME
 default_sort_order = dcpd_config.DEFAULT_SORT_ORDER
 default_debug_mode=dcpd_config.DEFAULT_DEBUG_MODE
 
-# Create an alias for convenience
-logger_info = dcpd_log_info.logger
+# Create an alias for conveniencelogger_info = dcpd_log_info.logger
 logger_debug = dcpd_log_debug.logger
+logger_info = dcpd_log_info.logger
 
 # Modify the path for files
 output_csv_file = os.path.join("..", "data", "dcpd_host_networking.csv")
@@ -35,29 +53,29 @@ def validate_file_arguments(args) -> None:
     """
     Validates the file arguments for -o.
     Raises exceptions if the paths are invalid.
-    
+
     Parameters:
         args: A namespace object that holds the arguments.
-        
+
     Raises:
         FileNotFoundError: If a specified directory or file does not exist.
         PermissionError: If a specified directory is not writable.
     """
-    
+
     # Validate the output HTML file path if provided by the user
     if args.output_html:
         # Use the default output HTML file name
         output_html_file_path = default_output_html_file_name
-        
+
         # Extract the directory from the file path
         output_dir = os.path.dirname(output_html_file_path) or '.'
-        
+
         # Validate the existence of the directory
         if not os.path.exists(output_dir):
             msg = f"Error: Directory {output_dir} does not exist."
             logger_info.error(msg)
             raise FileNotFoundError(msg)
-        
+
         # Validate write permissions for the directory
         if not os.access(output_dir, os.W_OK):
             msg = f"Error: Directory {output_dir} is not writable."
@@ -83,8 +101,8 @@ def parse_arguments():
 
     # Initializing argument parser with a custom description
     parser = argparse.ArgumentParser(description="Parse Docker Compose file and extract ports.", add_help=False)
-    
-   
+
+
     # Define other command-line arguments
     parser = argparse.ArgumentParser(description="Parse Docker Compose file and extract ports.", add_help=False)
     parser.add_argument("-e", "--sort-by-external-port", action="store_true", help="Sort the table by External Port.")
@@ -105,23 +123,23 @@ def parse_arguments():
 
         # Log successful completion to info log
         logger_info.info("Arguments have been parsed.")
-        
+
         # Logging the raw arguments for debugging purposes
         dcpd_utils.log_separator_data(logger_debug)
-        logger_debug.debug(f"Raw arguments: {args}")
+        logger_debug.debug("Raw arguments: %s", args)
         dcpd_utils.log_separator_data(logger_debug)
 
-    except Exception as e:
-        logger_info.error(f"Error while parsing arguments: {e}")
-        logger_info.error(traceback.format_exc()) 
-        raise e
+    except Exception as error:
+        logger_info.error("Error while parsing arguments: %s", error)
+        logger_info.error(traceback.format_exc())
+        raise error
 
     try:
         # Validate argument combinations and set default values
         validate_and_set_defaults(args, parser)
-    except Exception as e:
-        logger_info.error(f"Error during validation and setting defaults: {e}")
-        raise e
+    except Exception as error:
+        logger_info.error("Error during validation and setting defaults: %s", error)
+        raise error
 
     return args
 
@@ -134,7 +152,7 @@ def validate_and_set_defaults(args, parser):
     try:
         # Log a message indicating the validation process is starting.
         logger_info.info("Beginning to validate arguments.")
-        
+
         # If the help or version flags are provided, log the occurrence and return early
         # since no further processing is needed.
         if args.help or args.version:
@@ -189,12 +207,14 @@ def validate_and_set_defaults(args, parser):
         logger_info.info("Finished validating arguments.")
 
     # Handle specific ValueError exception during the validation process
-    except ValueError as ve:
-        logger_info.error(str(ve))
-        parser.error(str(ve))
-    # Handle any other unexpected exception during the validation process
-    except Exception as e:
-        print(f"Error: {e}")  # Print the error to the console
-        logger_info.error(f"Unexpected error during argument validation: {e}")
-        parser.error("An unexpected error occurred during argument validation. Check logs for more details.")
-
+    except ValueError as value_error:
+        logger_info.error(str(value_error))
+        parser.error(str(value_error))
+    # Handle specific argparse.ArgumentError exception
+    except argparse.ArgumentError as arg_error:
+        logger_info.error(str(arg_error))
+        parser.error(str(arg_error))
+    # Handle specific exceptions related to file operations or permissions
+    except (FileNotFoundError, PermissionError) as file_error:
+        logger_info.error(str(file_error))
+        parser.error(str(file_error))

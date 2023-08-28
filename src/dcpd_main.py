@@ -1,17 +1,53 @@
 #!/usr/bin/env python3
-# dcpd_main.py
 
+"""
+dcpd_main.py - Docker Compose Ports Dump (DCPD) Utility
+
+This module contains the primary execution logic for the Docker Compose Ports Dump (DCPD) utility.
+The DCPD utility is designed to analyze Docker Compose files and extract essential port mapping
+information, displaying it in a user-friendly manner or exporting it for other uses.
+
+The utility offers several functionalities including:
+    - Parsing Docker Compose files for port mapping details.
+    - Storing extracted data in a SQLite database.
+    - Providing detailed debugging outputs.
+    - Generating HTML-based outputs and reports.
+    - Redacting sensitive information from outputs.
+    - Generating README documentation.
+    - Offering a versatile command-line argument interface for easy user customization.
+
+Key Functions include:
+    - has_port_mappings() : Check if port mappings exist in the SQLite database.
+    - dcpd() : The core function that coordinates the DCPD utility's operations.
+    - execute_dcpd() : Executes the DCPD utility, handling initialization, execution, and termination.
+
+Usage:
+    The utility is typically executed from the command line using:
+    $ python3 dcpd_main.py [OPTIONS]
+"""
+
+# Standard library imports
+import os
+import platform
+import sqlite3
 import sys
+import time
+import traceback
+from typing import Any
 
 # Add config to the sys path
+# pylint: disable=wrong-import-position
 sys.path.append('../config')
 
-# Import custom, standard, and thrid-party modules
-import argparse
-from colorama import Fore, Style
+# Third-party imports (if any)
 import dcpd_config
+
+# Custom module imports
+import dcpd_api
+import dcpd_arguments_parser as dcpd_ap
 import dcpd_compose_parser as dcpd_cp
 import dcpd_debug
+import dcpd_docker
 import dcpd_help
 import dcpd_host_networking as dcpd_hn
 import dcpd_log_debug
@@ -22,15 +58,6 @@ import dcpd_port_printer as dcpd_pp
 import dcpd_redaction
 import dcpd_stats
 import dcpd_utils
-import os
-import pkg_resources
-import platform
-import sqlite3
-import subprocess
-import tabulate
-import time
-from typing import Any, List, Tuple
-import yaml
 
 # Create an alias for convenience
 logger_info = dcpd_log_info.logger
@@ -59,10 +86,10 @@ def has_port_mappings(cursor: Any) -> bool:
     """
     # Execute a SQL command to count the number of records in the 'service_info' table.
     cursor.execute("SELECT COUNT(*) FROM service_info")
-    
+
     # Fetch the result of the SQL command, which is the count of records.
     count = cursor.fetchone()[0]
-    
+
     # Return True if there's at least one record (port mapping) in the database, False otherwise.
     return count > 0
 
@@ -133,12 +160,12 @@ def dcpd(args):
 
         # After database update, retrieve all stored port data.
         all_ports_data = dcpd_cp.parse_docker_compose_and_get_service_ports(cursor, args)
-        logger_info.info(f"Number of ports fetched: {len(all_ports_data)}")
+        logger_info.info("Number of ports fetched: %d", len(all_ports_data))
 
         # Logging the extracted port data for debugging.
         dcpd_utils.log_separator_data(logger_debug)
         logger_debug.debug("Parsed Docker Compose & Extracted Ports")
-        logger_debug.debug(f"all_ports_data: {all_ports_data}")
+        logger_debug.debug("all_ports_data: %s", all_ports_data)
         dcpd_utils.log_separator_data(logger_debug)
 
         # Update database to reflect services that have associated port mappings.
@@ -148,10 +175,6 @@ def dcpd(args):
         # Further refine database records by associating services with corresponding applications.
         dcpd_cp.update_mapped_app_from_db(cursor, args)
         logger_info.info("Database updated with mapped apps for the vpn container if applicable.")
-
-        # Gather services attached to the host network
-        dcpd_hn.host_networking(cursor, args)
-        logger_info.info("Services attached to host networking collected.")
 
         # Generate an exhaustive debug report covering environment, port mappings, and software details and create dcpd_debug.txt.
         debug_info, port_mapping_str, ports_data_str, environment_data_lines = dcpd_debug.generate_debug_info(cursor)
@@ -170,7 +193,7 @@ def dcpd(args):
             dcpd_debug.print_debug_output(debug_info, port_mapping_str, ports_data_str, environment_data_lines, paginate=True, display=True)
 
             return
-        elif args.sort_by_external_port:
+        if args.sort_by_external_port:
             # Format and display port data sorted by external port numbers.
             dcpd_pp.format_all_ports(cursor, args, "-e")
         elif args.sort_by_service_name:
@@ -180,6 +203,24 @@ def dcpd(args):
             # Produce an HTML webpage containing the formatted port data.
             dcpd_output.generate_pretty_web_page(cursor, args)
             logger_info.info("Web page output generated.")
+
+            # Gather services attached to the host network
+            dcpd_hn.host_networking(cursor, args)
+            logger_info.info("Services attached to host networking collected.")
+
+            # Collect docker ports
+            dcpd_docker.get_container_ports(cursor, args)
+            dcpd_docker.get_container_mappings(cursor, args)
+
+            # Generate dcpd_container_info.csv
+            dcpd_docker.export_container_info_to_csv(args)
+
+            # Generate dcpd_container_stats.csv
+            dcpd_docker.export_container_stats_to_txt(args)
+
+            # Generate API spec
+            dcpd_api.fetch_and_save_openapi_spec (dcpd_api.api_spec_url, dcpd_api.output_api_spec)
+
         else:
             # Default: Format and display port data in a general manner.
             dcpd_pp.format_all_ports(cursor, args)
@@ -188,18 +229,19 @@ def dcpd(args):
         conn.commit()
         logger_info.info("Database changes committed.")
 
-    except sqlite3.Error as e:
+    except sqlite3.Error as error:
         # Handle SQLite specific errors.
-        logger_info.error(f"Database error: {e}")
+        logger_info.error("Database error: %s", error)
         if conn:
             conn.rollback()
         sys.exit(1)
-    except Exception as e:
+    except Exception as error:  # Keep a generic exception catch, but log details for diagnosis.
         # Generic exception handler to log unexpected errors and provide diagnostic information.
-        import traceback
         logger_info.error("======= Diagnostic Traceback =======")
         logger_info.error(traceback.format_exc())
+        logger_info.error("Error: %s", error)
         logger_info.error("====================================")
+        raise  # Re-raises the caught exception.
     finally:
         # Ensure the database connection is closed, regardless of the program's exit path.
         if conn:
@@ -210,7 +252,7 @@ def dcpd(args):
         logger_info.info("Finished executing the Docker Compose Ports Dump (DCPD) utility.")
 
 # -------------------------------------------------------------------------
-def execute_dcpd(args):
+def execute_dcpd():
     """
     Execute the Docker Compose Ports Dump (DCPD) utility.
 
@@ -220,7 +262,10 @@ def execute_dcpd(args):
     Note:
         Verbose mode provides detailed console output for better user interaction.
     """
-    
+
+    # Parsing command-line arguments to determine the user's desired functionality.
+    args = dcpd_ap.parse_arguments()
+
     # Entry messages
     logger_info.info("Starting the Docker Compose Ports Dump (DCPD) execution.")
     if args.verbose:
@@ -231,12 +276,12 @@ def execute_dcpd(args):
     dcpd_utils.log_separator_debug(logger_debug)
 
     # Logging the OS context can be beneficial for debugging platform-specific issues.
-    logger_info.info(f"Running on: {platform.platform()}")
+    logger_info.info("Running on: %s", platform.platform())
 
     start_time = time.time()
 
     execution_time = 0  # Initialize the variable before the try block
-    
+
     try:
         # Execute the main functionality.
         dcpd(args)
@@ -244,15 +289,15 @@ def execute_dcpd(args):
         # Calculate the total execution time.
         end_time = time.time()
         execution_time = end_time - start_time
-        logger_info.info(f"Operation took {execution_time:.2f} seconds.")
+        logger_info.info("Operation took %.2f seconds.", execution_time)
 
         # Update statistics file with the new execution time.
-        with open(dcpd_stats_txt, "r") as stats_file:
+        with open(dcpd_stats_txt, "r", encoding="utf-8") as stats_file:
             stats_lines = stats_file.readlines()
 
         stats_lines.append(f"execution_time_seconds: {execution_time:.2f}\n")
 
-        with open(dcpd_stats_txt, "w") as stats_file:
+        with open(dcpd_stats_txt, "w", encoding="utf-8") as stats_file:
             stats_file.writelines(stats_lines)
 
         # Redact sensitive data from the output files.
@@ -266,9 +311,10 @@ def execute_dcpd(args):
         # Set ownership and permissions
         dcpd_utils.set_permissions_and_ownership(args)
 
-    except Exception as e:
+    except Exception as error:
         # Generic exception handling to cover unexpected errors.
-        logger_info.error(f"Encountered an unexpected error: {str(e)}")
+        logger_info.error("Encountered an unexpected error: %s", error)
+        raise  # Re-raises the caught exception.
 
     # If verbosity is enabled, provide more granular feedback to the console.
     if args.verbose:
@@ -285,7 +331,7 @@ def execute_dcpd(args):
 # -------------------------------------------------------------------------
 if __name__ == '__main__':
     try:
-        execute_dcpd(args)
+        execute_dcpd()
     except (KeyboardInterrupt, EOFError):
         logger_info.error("Process interrupted. Exiting gracefully.")
         # Optionally, you can exit the script with a status code.

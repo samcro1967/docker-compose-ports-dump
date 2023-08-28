@@ -1,4 +1,4 @@
-:80 {
+:8080 {
         log {
                 output file /app/data/dcpd_caddy.log {
                         roll_size 50mb
@@ -19,6 +19,10 @@
         # Serve CSS files with the correct MIME type
         @cssFiles path *.css
         header @cssFiles Content-Type text/css
+
+		# Set MIME type for the --dynamic-font-link path
+		@fontLink path /--dynamic-font-link
+		header @fontLink Content-Type text/css
 
         # Serve CSV files with the correct MIME type
         @csvFiles path *.csv

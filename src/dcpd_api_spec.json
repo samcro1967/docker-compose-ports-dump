@@ -1,0 +1,145 @@
+{
+  "basePath": "/",
+  "definitions": {},
+  "info": {
+    "description": "dcpd API Documentation",
+    "title": "dcpd API",
+    "version": "v1.1.0"
+  },
+  "paths": {
+    "/api/data/fetch_table/{table_name}": {
+      "get": {
+        "parameters": [
+          {
+            "enum": [
+              "container_ports",
+              "host_networking",
+              "port_mappings",
+              "service_info"
+            ],
+            "in": "path",
+            "name": "table_name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns data from the SQLite database"
+          },
+          "400": {
+            "description": "Invalid table name provided"
+          },
+          "500": {
+            "description": "Error fetching data from the SQLite database"
+          }
+        },
+        "summary": "Fetch Data from SQLite Endpoint"
+      }
+    },
+    "/api/proxy/database/{endpoint}/{table_name}": {
+      "get": {
+        "parameters": [
+          {
+            "enum": [
+              "fetch_table"
+            ],
+            "in": "path",
+            "name": "endpoint",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "enum": [
+              "container_ports",
+              "host_networking",
+              "port_mappings",
+              "service_info"
+            ],
+            "in": "path",
+            "name": "table_name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proxy returns the data from the desired database table"
+          },
+          "400": {
+            "description": "Invalid table name provided or unsupported database operation"
+          }
+        },
+        "summary": "Database Proxy Endpoint"
+      }
+    },
+    "/api/proxy/version/{endpoint}": {
+      "get": {
+        "parameters": [
+          {
+            "enum": [
+              "current-version",
+              "latest-version"
+            ],
+            "in": "path",
+            "name": "endpoint",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proxy returns the data from the desired endpoint"
+          }
+        },
+        "summary": "Version Proxy Endpoint"
+      }
+    },
+    "/api/system/current_version": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Returns version"
+          }
+        },
+        "summary": "Current Version Endpoint"
+      }
+    },
+    "/api/system/health": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Returns health status"
+          }
+        },
+        "summary": "Health Check Endpoint"
+      }
+    },
+    "/api/system/latest-version": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Returns the latest GitHub version"
+          },
+          "500": {
+            "description": "Error fetching the latest version from GitHub"
+          }
+        },
+        "summary": "Latest Version Endpoint"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "securityDefinitions": {
+    "ApiKey": {
+      "in": "query",
+      "name": "apikey",
+      "type": "apiKey"
+    }
+  },
+  "swagger": "2.0"
+}
