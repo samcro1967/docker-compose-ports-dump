@@ -1,0 +1,183 @@
+<!-- dcpd_output_template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Docker Compose Ports Dump</title>
+    <!-- Include jQuery and tablesorter libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js"></script>
+    <!-- Include default tablesorter theme and custom styles -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/css/theme.default.min.css">
+    <link rel="stylesheet" href="../web/dcpd_styles.css">
+	<link rel="icon" href="../web/dcpd_icon.png" type="image/png">
+    <link rel="shortcut icon" href="../web/dcpd_icon.png" type="image/png">
+</head>
+<body>
+    <!-- Date and time container -->
+    <div id="datetime-container">
+        <div id="date-time"></div>
+		<div id="time-zone">Timezone: </div>
+    </div>
+    <!-- Main container for layout -->
+    <div class="container">
+        <!-- Side navigation panel -->
+        <div class="sidenav">
+			<img src="../web/dcpd_icon.png" alt="DCPD Icon" class="navbar-icon">
+            <h3>Navigation</h3>
+            <a href="#" id="view-ports">Docker Compose Ports</a>
+            <a href="#" id="view-host-networking">Host Networking</a>
+			<a href="#" id="view-info-log">Info Log</a>
+            <a href="#" id="view-debug-log">Debug Log</a>
+			<a href="#" id="view-debug-info">Debug Info</a>
+			<a href="#" id="view-config-file">Config File</a>
+			<a href="#" id="view-stats-file">Stastics</a>
+			<a href="#" id="view-readme">README</a>
+			<a href="#" target="_blank" id="view-api-docs">API Docs</a>
+        </div>
+        <!-- Main content area -->
+        <div class="main-content">
+			<!-- Location and temperature widget -->
+			<div id="location_temperature-container">
+				<div id="location"></div>
+				<div id="temperature"></div>
+			</div>
+            <!-- Ports content section -->
+            <div id="ports-content">
+                <h1>Docker Compose Ports Dump</h1>
+                <!-- Version Information -->
+				<div class="version-container">
+						<div class="version-info">Version: v1.0.0</div>
+						<div id="update-info"></div>
+						<!-- GitHub Repository Link -->
+						<div><a href="https://github.com/samcro1967/docker-compose-ports-dump" target="_blank" class="github-link">GitHub</a></div>
+				</div>
+                <!-- Search and export buttons -->
+                <div class="action-bar">
+                    <input class="search" type="text" placeholder="Global Search...">
+                    <button id="exportCSV">Export to CSV</button>
+					<button id="refreshTable">Refresh Table</button>
+					<button id="exportRedactedSupportFile">Export Support Files</button>
+                </div>
+                <!-- Table for ports data -->
+                <div class="table-container">
+                    <table id="ports_table">
+                        <thead>
+							<!-- Table headers -->
+							<tr>
+								<th style="text-align: center;">Service Name</th>
+								<th style="text-align: center;">External Port</th>
+								<th style="text-align: center;">Internal Port</th>
+								<th style="text-align: center;">Port Mapping</th>
+								<th style="text-align: center;">Mapped App</th>
+							</tr>
+                        </thead>
+                        <tbody>
+						<!-- JavaScript will populate this tbody with rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+			<!-- Host Networking content section -->
+			<div class="header" id="host-networking-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Host Networking Overview</h1>
+					<!-- Add the refresh button for host networking here -->
+					<button class="btn-refresh" id="refresh-host-networking">Refresh Host Networking</button>
+					<button class="btn-export" id="exportHostNetworking">Export Host Networking</button>
+				</div>
+				<div class="scrollable.content-section">
+					<!-- Table for host networking data -->
+					<table id="host_networking_table">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Service Name</th>
+							</tr>
+						</thead>
+						<tbody>
+							<!-- JavaScript will populate this tbody with rows -->
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<!-- Info log content section -->
+			<div class="header" id="info-log-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Info Log</h1>
+					<button class="btn-refresh" id="refresh-info-log">Refresh Info Log</button>
+					<!-- Add an export button for Info Log -->
+					<button class="btn-export" id="exportInfoLog">Export Info Log</button>
+				</div>
+				<div class="scrollable.content-section">
+					<pre id="info-log-area"></pre>
+				</div>
+			</div>
+			<!-- Debug log content section -->
+			<div class="header" id="debug-log-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Debug Log</h1>
+					<button class="btn-refresh" id="refresh-debug-log">Refresh Debug Log</button>
+					<!-- Add an export button for Debug Log -->
+					<button class="btn-export" id="exportDebugLog">Export Debug Log</button>
+				</div>
+				<div class="scrollable.content-section">
+					<pre id="debug-log-area"></pre>
+				</div>
+			</div>
+			<!-- Debug Info content section -->
+			<div class="header" id="debug-info-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Debug Information</h1>
+					<button class="btn-refresh" id="refresh-debug-info">Refresh Debug Info</button>
+					<!-- Add an export button for Debug Info -->
+					<button class="btn-export" id="exportDebugInfo">Export Debug Info</button>
+				</div>
+				<div class="scrollable.content-section">
+					<pre id="debug-info-area"></pre>
+				</div>
+			</div>
+            <!-- Config File content section -->
+            <div class="header" id="config-file-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Config File</h1>
+					<button class="btn-refresh" id="refresh-config-file">Refresh Config File</button>
+					<button class="btn-export" id="exportConfigFile">Export Config File</button>
+				</div>
+				<div class="scrollable.content-section">
+					<pre id="config-file-area"></pre>
+				</div>
+            </div>
+            <!-- Stats File content section -->
+            <div class="header" id="stats-file-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Stastics</h1>
+					<button class="btn-refresh" id="refresh-stats-file">Refresh Stats File</button>
+					<button class="btn-export" id="exportStatsFile">Export Stats File</button>
+				</div>
+				<div class="scrollable.content-section">
+					<pre id="stats-file-area"></pre>
+				</div>
+			</div>
+			<!-- README content section -->
+			<div class="header" id="readme-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>README</h1>
+				</div>
+				<div class="scrollable.content-section">
+					<!-- Add the target="_blank" attribute to open in a new tab -->
+					<a href="../README.html" target="_blank">Open README in a New Tab</a>
+				</div>
+			</div>
+			<!-- Footer container for additional information -->
+			<div id="footer-container">
+				<div id="file-name">File name: <span id="current-file-name"></span></div>
+				<div id="last-updated">Last updated: <span id="file-update-time"></span></div>
+			</div>
+    </div>
+    <!-- Include the JavaScript script -->
+    <script src="../web/dcpd_js_script.js"></script>
+	<script src="../web/dcpd_js_functions.js"></script>
+	<script src="../web/dcpd_js_eventListeners.js"></script>
+</body>
+</html>

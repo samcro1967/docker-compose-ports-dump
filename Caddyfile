@@ -1,0 +1,31 @@
+:80 {
+        log {
+                output file /app/data/dcpd_caddy.log {
+                        roll_size 50mb
+                        roll_keep 5
+                        roll_keep_for 240h
+                }
+        }
+
+        # Assuming you have environment variables named BASIC_AUTH_USER and BASIC_AUTH_HASHED_PASS
+        basicauth /* {
+                {BASIC_AUTH_USER} {BASIC_AUTH_HASHED_PASS}
+        }
+
+        # Serve JavaScript files with the correct MIME type
+        @jsFiles path *.js
+        header @jsFiles Content-Type application/javascript
+
+        # Serve CSS files with the correct MIME type
+        @cssFiles path *.css
+        header @cssFiles Content-Type text/css
+
+        # Serve CSV files with the correct MIME type
+        @csvFiles path *.csv
+        header @csvFiles Content-Type text/csv
+
+        encode gzip
+        root * /app
+        try_files {path} /config/dcpd_output.html
+        file_server browse
+}

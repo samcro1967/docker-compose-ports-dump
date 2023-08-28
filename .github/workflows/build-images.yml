@@ -1,0 +1,60 @@
+name: Build Docker Images
+
+on:
+  workflow_dispatch: # This enables manual triggering
+  schedule:
+    - cron: "0 7 * * *"
+  push:
+    tags:
+      - 'v*.*.*' 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.TOKEN }}
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Fetch latest tag
+      id: latesttag
+      run: echo "version=$(git tag | sort -V | tail -n 1)" >> $GITHUB_ENV
+
+    - name: Print latest tag
+      run: echo "Latest Tag is ${{ env.version }}"
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.TOKEN }}
+
+    - name: Build Docker Image
+      run: |
+        if [[ "${{ env.version }}" != "" ]]; then
+          docker build -t ghcr.io/samcro1967/docker-compose-ports-dump:latest -t ghcr.io/samcro1967/docker-compose-ports-dump:${{ env.version }} .
+        else
+          docker build -t ghcr.io/samcro1967/docker-compose-ports-dump:latest .
+        fi
+
+    - name: Push Docker Image
+      run: |
+        docker push ghcr.io/samcro1967/docker-compose-ports-dump:latest
+        if [[ "${{ env.version }}" != "" ]]; then
+          docker push ghcr.io/samcro1967/docker-compose-ports-dump:${{ env.version }}
+        fi
+
+    - name: Delete Old Untagged Versions
+      uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+      with:
+        token: ${{ secrets.TOKEN }}
+        repository_owner: samcro1967
+        package_name: docker-compose-ports-dump
+        untagged_only: true
+        except_untagged_multiplatform: false
+        owner_type: user

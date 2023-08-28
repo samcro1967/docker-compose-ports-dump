@@ -1,0 +1,241 @@
+/* dcpd_styles.css */
+
+@keyframes blinker {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.blinking {
+  animation: blinker 1s linear infinite;
+}
+
+#footer-container {
+    position: absolute; /* Position absolutely */
+    bottom: 20px; /* Offset from the bottom edge */
+    left: 50%; /* Center it horizontally */
+    transform: translateX(-50%); /* Move it to the left by half of its own width to center it */
+    padding: 8px 15px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    text-align: center;
+    display: inline-block;
+    align-items: center;
+    max-width: 250px;
+    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
+    color: var(--dynamic-text-color); /* Use the dynamic text color */
+    font-weight: bold;
+    font-size: 15px;
+}
+
+/* Styles for elements within the footer */
+#file-name, #last-updated {
+    margin: 0; /* No margin for a compact display */
+    font-size: 0.9em; /* Slightly smaller font size for compactness */
+    text-align: center; /* Centered text */
+}
+
+.version-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Align content horizontally to the center */
+    justify-content: center; /* Align content vertically to the center */
+    padding: 10px; /* Add padding for spacing */
+    background-color: var(--dynamic-background-color);
+    color: var(--dynamic-text-color);
+    font-weight: bold;
+    font-size: 15px;
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.version-info,
+.update-info,
+.github-link {
+    margin: 0; /* No margin for a compact display */
+    font-size: 0.9em; /* Slightly smaller font size for compactness */
+    text-align: center; /* Centered text */
+}
+
+.header {
+    align-items: center;
+}
+
+.btn-refresh {
+    align-items: center;
+    margin-bottom: +20px;
+}
+
+.scrollable.content-section {
+    max-height: calc(100vh - 100px); /* Adjust as necessary based on the height of your header, refresh button, and any other UI elements */
+    overflow-y: auto; /* Allow scrolling */
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
+    color: var(--dynamic-text-color); /* Use the dynamic text color */
+	font-weight: bold;
+	font-size: 15px
+}
+
+.navbar-icon {
+    display: block;
+    width: 100px;  /* Width of the icon */
+    height: 100px; /* Height of the icon */
+    margin: 10px auto;  /* Centers the icon */
+    background-color: white;  /* White background for the box */
+    border-radius: 10px;  /* Rounded corners */
+    padding: 10px;  /* Space between the icon and the outer edge of the box */
+    box-sizing: border-box;  /* Makes sure the total size including padding remains as defined above */
+}
+
+/* Body styles to setup flex container and ensure full viewport height */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Main container to layout the side navigation and main content */
+.container {
+    display: flex;
+    flex: 1;  /* This ensures that the container takes all the available space */
+}
+
+/* Side navigation header styles for better padding */
+.sidenav h3 {
+    padding: 0 20px;
+}
+
+/* Side navigation bar styles */
+.sidenav {
+    width: 20%;
+    padding: 20px 0; /* Top and bottom padding */
+    box-sizing: border-box; /* Include padding and border in width and height calculations */
+    min-height: 100vh; /* Ensure it covers full viewport height */
+    position: fixed; /* Fixed positioning to keep it visible when scrolling */
+    height: 100vh;
+    top: 0; /* Start from the top edge */
+    left: 0; /* Start from the left edge */
+    overflow-y: auto; /* Allow vertical scrolling if content overflows */
+    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
+    color: var(--dynamic-text-color); /* Use the dynamic text color */
+	font-weight: bold;
+	font-size: 15px
+}
+
+/* Side navigation link styles */
+.sidenav a {
+    display: block;
+    font-size: 16px; /* Standard font size for links */
+    padding: 8px 16px; /* Padding for aesthetics */
+    color: white; /* Text color to contrast with the dark background */
+    text-decoration: none; /* Remove any default underlines */
+}
+
+/* Side navigation link hover styles for better user interaction */
+.sidenav a:hover {
+    background-color: #34575e; /* Slightly darker shade on hover */
+    color: #ffffff; /* Maintain white text color */
+}
+
+/* Side navigation link active styles to show the current page */
+.sidenav a.active {
+    background-color: #E74C3C; /* Distinct color for the active link */
+    color: #ffffff; /* White text for contrast */
+}
+
+/* Styles for the main content area to the right of the side navigation */
+.main-content {
+    position: relative; /* Set positioning context for potential child elements */
+    width: 80%; /* Take up the remaining width after the side navigation */
+    padding-left: 20px; /* Padding to prevent content from sticking to the navigation */
+    box-sizing: border-box; /* Include padding in width calculations */
+    margin-left: 20%; /* Offset to the right by the width of the side navigation */
+    text-align: center; /* Central alignment for main content */
+}
+
+/* Styles to control the visible portion of a table */
+.table-container {
+    max-height: 400px; /* Limit height to show only some rows at a time */
+    overflow-y: auto; /* Allow vertical scrolling for the table */
+    position: relative; /* Set positioning context for child elements */
+}
+
+/* Sticky table header styles to keep headers visible while scrolling */
+#ports_table thead, 
+#ports_table thead th {
+    position: sticky;
+    top: 0;
+    background-color: white; /* Solid background to ensure readability */
+    z-index: 2; /* Keep headers above table rows */
+}
+
+/* Styles for fixed headers when using the tablesorter plugin */
+.tablesorter-stickyHeader {
+    position: fixed !important;
+    top: 0 !important;
+    z-index: 100; /* Ensure the sticky header is on top of most other elements */
+    background-color: #fff; /* Solid background for readability */
+    border: 1px solid #ddd; /* Define border for clear separation */
+    margin: 0; /* No margin to keep header position consistent */
+    width: auto; /* Automatic width based on content */
+    box-shadow: 0 1px 3px rgba(0,0,0,.3); /* Shadow for a raised appearance */
+}
+
+/* Styles for a fixed date/time widget */
+#datetime-container {
+    position: fixed; /* Fixed position to keep it visible */
+    top: 10px; /* Offset from the top edge */
+    right: 10px; /* Offset from the right edge */
+    padding: 8px 15px; /* Padding around content */
+    border-radius: 15px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); /* Drop shadow for depth */
+    z-index: 1000; /* Ensure the widget is on top of other content */
+    text-align: center; /* Centered text within the widget */
+    display: inline-block; /* Block display but inline behavior */
+    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
+    color: var(--dynamic-text-color); /* Use the dynamic text color */
+	font-weight: bold;
+	font-size: 15px
+}
+
+/* Styles for individual elements within the date/time widget */
+#date-time, #time-zone, #location, #temperature {
+    margin: 0; /* No margin for a compact display */
+    font-size: 0.9em; /* Slightly smaller font size for compactness */
+    text-align: center; /* Centered text */
+}
+
+/* Styles for a fixed location and temperature widget */
+#location_temperature-container {
+    position: absolute; /* Absolute position within a relative or fixed parent */
+    top: 10px; /* Offset from the top edge */
+    left: 10px; /* Offset from the left edge */
+    padding: 8px 15px; /* Padding around content */
+    border-radius: 15px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); /* Drop shadow for depth */
+    z-index: 1000; /* Ensure the widget is on top of other content */
+    text-align: center; /* Centered text within the widget */
+    display: inline-block; /* Block display but inline behavior */
+    width: 200px; /* Specific width for this widget */
+    background-color: var(--dynamic-background-color); /* Use the dynamic background color */
+    color: var(--dynamic-text-color); /* Use the dynamic text color */
+	font-weight: bold;
+	font-size: 15px;
+}
+
+/* Styles for log areas to format and present log entries */
+#info-log-area, #debug-log-area, #debug-info-area, #config-file-area, #stats-file-area {
+    text-align: left; /* Left-aligned text for log entries */
+    white-space: pre-wrap; /* Preserve whitespace and breaks in log entries */
+	font-size: 115%; /* This will increase the font-size of the entire body by 15% */
+}

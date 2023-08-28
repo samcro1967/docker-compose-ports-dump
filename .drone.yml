@@ -1,0 +1,13 @@
+kind: template
+load: docker.yaml
+data:
+  localRepo: osu.registry:5000/osuhickeys/docker_compose_ports_dump
+  commands:
+    - git clone http://osu.gitea:3069/osuhickeys/docker_compose_ports_dump.git /drone/src/
+    - ls
+  Dockerfile: /drone/src/Dockerfile
+  branch: master
+  customStepName: make
+  customStepImageName: balenalib/amd64-debian-golang:latest
+  customStepCommand:
+    - ls

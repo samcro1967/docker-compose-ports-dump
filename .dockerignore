@@ -1,0 +1,5 @@
+.git
+256-colors.sh
+build/*
+config/dcpd_config.py
+dcpd_notes.txt

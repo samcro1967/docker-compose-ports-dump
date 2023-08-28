@@ -1,0 +1,170 @@
+<h1>
+<a id="table-of-contents" href="#table-of-contents"></a>Table of Contents</h1>
+<ul>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#features">Features</a></li>
+<li><a href="#current-known-issues">Current Known Issues</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#local-usage-instructions">Local Usage Instructions</a></li>
+<li><a href="#to-do">To DO</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#acknowledgements">Acknowledgements</a></li>
+</ul>
+<h1>
+<a id="summary" href="#summary"></a><strong>Summary</strong></h1>
+<p>This script parses a docker-compose.yml file(s) and dumps all assigned ports into a table and displays them in a terminal.  It defaults to sort by the order services are defined in docker-compose.yml.  It also has options to sort by external ports or by container names.  If you have containers that are attached to a VPN container, you can also have those mapped as well.</p>
+<p>It can also generate a web page.  The web page must be run from a web server and viewed via http ot https as it includes JavaScript.  The web page also contains view of all services mapped to host networking as well as the info and debug logs.</p>
+<p>The script does not change the existing file and only needs read access to your docker-compose.yml file.</p>
+<p>This was developed on Ubuntu 22.04 running Python 3.10.6.  Use at your own risk.  This comes with no warranty or guarantees.</p>
+<h1>
+<a id="features" href="#features"></a><strong>Features</strong></h1>
+<p><a href="#table-of-contents">Table of Contents</a></p>
+<ul>
+<li>Collect and display the following either in the terminal or on a web page
+<ul>
+<li>All external and internal port definitons for services in docker-compose.yml</li>
+<li>Ports mapped to a VPN container</li>
+</ul>
+</li>
+<li>Additionally display the following on the web page
+<ul>
+<li>Containers attached to host networking</li>
+<li>info and debug logs</li>
+<li>dcpd debug information</li>
+<li>dcpd configuration file</li>
+<li>Stastics page</li>
+</ul>
+</li>
+<li>Export of all data from the web page</li>
+<li>Export all support files into redacted and password protected zip file</li>
+<li>Supports one or more docker-compose files</li>
+</ul>
+<h1>
+<a id="current-known-issues" href="#current-known-issues"></a><strong>Current Known Issues</strong></h1>
+<p><a href="#table-of-contents">Table of Contents</a></p>
+<ul>
+<li>Global search and column filters - Searching external and internal port for 80 will return 80 and 7801 as expected.  However, it will also return 8405.</li>
+<li>Does not work behind an https proxy</li>
+</ul>
+<h1>
+<a id="installation" href="#installation"></a><strong>Installation</strong></h1>
+<p><a href="#table-of-contents">Table of Contents</a></p>
+<h2><strong>Docker</strong></h2>
+<h3>Run this command to generate your own random API_KEY</h3>
+<pre><code>cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 24 ; echo
+</code></pre>
+<h3><strong>Docker Compose</strong></h3>
+<pre><code>  dcpd:
+    hostname: dcpd
+    image: ghcr.io/samcro1967/docker_compose_ports_dump:latest
+    container_name: dcpd
+    environment:
+      - TZ=${TZ}
+      - PUID=1000
+      - PGID=1000
+      - CRON_SCHEDULE=*/15 * * * *
+      - DOCKER_COMPOSE_FILE_PATHS=&quot;/compose-files/docker-compose.yml,/app/compose-files/docker-compose_test.yml&quot;
+      - DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name #Optional
+      - DEFAULT_DCPD_USERNAME=your_user_name #Optional
+      - DEFAULT_DCPD_PASSWORD=your_user_password #Optional
+      - REDACTED_ZIP_FILE_PASSWORD=P@55w0rd #Optional
+      - API_KEY=your_random_api_key
+    ports:
+      - &quot;80:80&quot;
+      - &quot;81:81&quot;
+    volumes:
+      # root of folder where all docker compose folder reside
+      - /path/to/compose/files:/compose-files
+    healthcheck:
+      test: /app/healthcheck.sh
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+</code></pre>
+<h3><strong>Docker Run</strong></h3>
+<pre><code>docker run \
+  --hostname dcpd \
+  --name dcpd \
+  -e TZ=${TZ} \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e CRON_SCHEDULE='*/15 * * * *' \
+  -e DOCKER_COMPOSE_FILE_PATHS=&quot;/compose-files/docker-compose.yml,/compose-files/docker-compose_test.yml&quot; \
+  -e DEFAULT_VPN_CONTAINER_NAME=your_vpn_container_name \
+  -e DEFAULT_DCPD_USERNAME=your_user_name \
+  -e DEFAULT_DCPD_PASSWORD=your_user_password \
+  -e REDACTED_ZIP_FILE_PASSWORD=P@55w0rd \
+  -e API_KEY=your_random_api_key \
+  -p 80:80 \
+  -p 81:81 \
+  -v /path/to/compose/files:/compose-files \
+  --health-cmd=&quot;/app/healthcheck.sh&quot; \
+  --health-interval=60s \
+  --health-timeout=10s \
+  --health-retries=3 \
+  --health-start-period=10s \
+  ghcr.io/samcro1967/docker_compose_ports_dump:latest
+</code></pre>
+<p>Launch your browser and go to http://ipaddress:80/dcpd</p>
+<pre><code>If you did not change the user name and password, here are the defaults:
+Default user name: dcpd_admin
+Default user password: P@55w0rd
+</code></pre>
+<h1>
+<a id="local-usage-instructions" href="#local-usage-instructions"></a><strong>Local Usage Instructions</strong></h1>
+<p><a href="#table-of-contents">Table of Contents</a></p>
+<h2><strong>For help:</strong></h2>
+<p>docker exec -it dcpd bash -c 'cd /app/src &amp;&amp; ./dcpd.py -h'</p>
+<p><a href="./docs/help.md">help.md</a></p>
+<h2><strong>port.mapping(s) example config</strong></h2>
+<p>docker exec -it dcpd bash -c 'cd /app/src &amp;&amp; ./dcpd.py -s'</p>
+<p><a href="./docs/examples.md">examples.md</a></p>
+<h2><strong>Terminal output example:</strong></h2>
+<p>docker exec -it dcpd bash -c 'cd /app/src &amp;&amp; ./dcpd.py'</p>
+<p><img src="./docs/server_info_table.png" alt="server_info_table" /></p>
+<h2><strong>Web Page Output Example:</strong></h2>
+<p>docker exec -it dcpd bash -c 'cd /app/src &amp;&amp; ./dcpd.py -o'</p>
+<p>Launch your browser and go to http://ipaddress:80/dcpd</p>
+<pre><code>Default user name: dcpd_admin
+Default user password: P@55w0rd
+</code></pre>
+<p><img src="./docs/service_info_web.png" alt="service_info_web" /></p>
+<h1>
+<a id="to-do" href="#to-do"></a>To Do</h1>
+<p><a href="#table-of-contents">Table of Contents</a></p>
+<ul>
+<li>✅ Support multiple docker-compose.yml files.</li>
+<li>❌ Auto scan a directory and subdirectories for docker-compose.yml files.</li>
+<li>🔲 Investigate arm64 image.</li>
+<li>🔲 Investigate supporting behind an https proxy.</li>
+</ul>
+<p>Legend</p>
+<ul>
+<li>✅ This task is complete.</li>
+<li>❌ This task is not being pursued.</li>
+<li>🔲 This task is yet to be done.</li>
+<li>🔜 This task is in progress.</li>
+</ul>
+<h1>
+<a id="license" href="#license"></a><strong>License</strong></h1>
+<p><a href="#table-of-contents">Table of Contents</a></p>
+<p>This project is licensed under the terms of the MIT license. See the <a href="LICENSE">LICENSE</a> file for details.</p>
+<h1>
+<a id="acknowledgements" href="#acknowledgements"></a><strong>Acknowledgements</strong></h1>
+<p><a href="#table-of-contents">Table of Contents</a></p>
+<p>This project makes use of the following third-party software:</p>
+<ul>
+<li>
+<p><strong>Caddy</strong>: An open-source web server with automatic HTTPS. Licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a>. More information can be found at the <a href="https://caddyserver.com/">Caddy Official Website</a> or the <a href="https://github.com/caddyserver/caddy">Caddy GitHub Repository</a>.</p>
+</li>
+<li>
+<p><strong>jQuery</strong>: A fast, small, and feature-rich JavaScript library. Licensed under the <a href="https://opensource.org/licenses/MIT">MIT License</a>. More information and source code can be found on the <a href="https://jquery.com/">jQuery Official Website</a>.</p>
+</li>
+<li>
+<p><strong>jquery.tablesorter</strong>: A jQuery plugin for turning a standard HTML table with THEAD and TBODY tags into a sortable table without refreshing the page. Licensed under the <a href="https://opensource.org/licenses/MIT">MIT License</a>. More details and source code are available at the <a href="https://mottie.github.io/tablesorter/docs/">jquery.tablesorter GitHub Repository</a>.</p>
+</li>
+<li>
+<p><strong>delete-untagged-ghcr-action</strong>: This action deletes untagged images from the GitHub Container Registry. Used under <a href="https://github.com/Chizkiyahu/delete-untagged-ghcr-action/blob/main/LICENSE">MIT License</a> (link to the license might change based on the repository structure). More details and source code are available at the <a href="https://github.com/Chizkiyahu/delete-untagged-ghcr-action">delete-untagged-ghcr-action GitHub Repository</a>.</p>
+</li>
+</ul>

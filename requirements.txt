@@ -1,0 +1,12 @@
+colorama
+flasgger
+flask
+flask_caching
+gunicorn
+markdown-it-py
+psutil
+PyYAML
+pyzipper
+requests
+stdlib_list
+tabulate
