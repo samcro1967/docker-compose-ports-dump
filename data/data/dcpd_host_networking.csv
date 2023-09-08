@@ -1,0 +1,12 @@
+id,service_name
+1,gptwol
+2,adguardhome
+3,homeassistant
+4,homebridge
+5,iotop
+6,netdata
+7,plex
+8,sponsorblockcast
+9,upsnap
+10,vnstat
+11,watchyourlan

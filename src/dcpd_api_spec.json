@@ -4,7 +4,7 @@
   "info": {
     "description": "dcpd API Documentation",
     "title": "dcpd API",
-    "version": "v1.1.0"
+    "version": "v1.1.1"
   },
   "paths": {
     "/api/data/fetch_table/{table_name}": {
@@ -34,7 +34,35 @@
             "description": "Error fetching data from the SQLite database"
           }
         },
-        "summary": "Fetch Data from SQLite Endpoint"
+        "summary": "Fetch Data from SQLite Endpoint",
+        "tags": [
+          "Data"
+        ]
+      }
+    },
+    "/api/logs": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "A JSON response containing the logs of the container.",
+            "schema": {
+              "properties": {
+                "logs": {
+                  "description": "Logs of the container.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "API endpoint to retrieve the logs of the current container.",
+        "tags": [
+          "Logs"
+        ]
       }
     },
     "/api/proxy/database/{endpoint}/{table_name}": {
@@ -70,7 +98,35 @@
             "description": "Invalid table name provided or unsupported database operation"
           }
         },
-        "summary": "Database Proxy Endpoint"
+        "summary": "Database Proxy Endpoint",
+        "tags": [
+          "Proxy"
+        ]
+      }
+    },
+    "/api/proxy/logs": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "A JSON response containing the logs of the container.",
+            "schema": {
+              "properties": {
+                "logs": {
+                  "description": "Logs of the container.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "API endpoint to retrieve the logs of the current container without requiring an API key.",
+        "tags": [
+          "Proxy"
+        ]
       }
     },
     "/api/proxy/version/{endpoint}": {
@@ -92,7 +148,10 @@
             "description": "Proxy returns the data from the desired endpoint"
           }
         },
-        "summary": "Version Proxy Endpoint"
+        "summary": "Version Proxy Endpoint",
+        "tags": [
+          "Proxy"
+        ]
       }
     },
     "/api/system/current_version": {
@@ -102,7 +161,10 @@
             "description": "Returns version"
           }
         },
-        "summary": "Current Version Endpoint"
+        "summary": "Current Version Endpoint",
+        "tags": [
+          "System"
+        ]
       }
     },
     "/api/system/health": {
@@ -112,7 +174,10 @@
             "description": "Returns health status"
           }
         },
-        "summary": "Health Check Endpoint"
+        "summary": "Health Check Endpoint",
+        "tags": [
+          "System"
+        ]
       }
     },
     "/api/system/latest-version": {
@@ -125,7 +190,10 @@
             "description": "Error fetching the latest version from GitHub"
           }
         },
-        "summary": "Latest Version Endpoint"
+        "summary": "Latest Version Endpoint",
+        "tags": [
+          "System"
+        ]
       }
     }
   },

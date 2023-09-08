@@ -33,6 +33,8 @@
 			<a href="#" id="view-debug-info">Debug Info</a>
 			<a href="#" id="view-config-file">Config File</a>
 			<a href="#" id="view-stats-file">Statistics</a>
+			<a href="#" id="view-misc-log">Misc. Logs</a>
+			<a href="#" id="view-container-logs">Container Logs</a>
 			<a href="#" id="view-readme">README</a>
 			<a href="#" target="_blank" id="view-api-docs">API Docs</a>
         </div>
@@ -248,6 +250,32 @@
 					<pre id="stats-file-area"></pre>
 				</div>
 			</div>
+			<!-- Misc. Logs content section -->
+			<div id="misc-log-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Misc. Logs</h1>
+					<div class="btn-group">
+						<select id="log-selector">
+							<option value="../data/dcpd_bootstrap.log">Bootstrap Log</option>
+							<option value="../data/dcpd_caddy.log">Caddy Log</option>
+							<option value="../data/dcpd_cron.log">Cron Log</option>
+							<option value="../data/dcpd_flask.log">Flask Log</option>
+							<option value="../data/dcpd_gunicorn.log">Gunicorn Log</option>
+							<option value="../data/dcpd_gunicorn_access.log">Gunicorn Access Log</option>
+							<option value="../data/dcpd_gunicorn_error.log">Gunicorn Error Log</option>
+						</select>
+						<button id="refresh-misc-log" class="btn-refresh">Refresh</button>
+						<button id="exportMiscLog" class="btn-export">Export</button>
+					</div>
+				</div>
+				<pre id="misc-log-area"></pre>
+			</div>
+			<!-- Container logs content section -->
+			<div id="container-logs-content" style="display:none;">
+				<div class="sticky-header">
+					<h1>Container Logs</h1>
+				</div>
+			</div>
 			<!-- README content section -->
 			<div class="header" id="readme-content" style="display:none;">
 				<div class="sticky-header">
@@ -288,7 +316,8 @@
 			</div>
     </div>
     <!-- Include the JavaScript script -->
-    <script src="../web/dcpd_js_script.js"></script>
+	<script src="../web/dcpd_js_constants.js"></script>
+	<script src="../web/dcpd_js_script.js"></script>
 	<script src="../web/dcpd_js_functions.js"></script>
 	<script src="../web/dcpd_js_eventListeners.js"></script>
 	<script src="../web/dcpd_js_docker_inspect.js"></script>
@@ -306,5 +335,7 @@
 	<script src="../web/dcpd_js_update_footer.js"></script>
 	<script src="../web/dcpd_js_docker_ps.js"></script>
 	<script src="../web/dcpd_js_docker_stats.js"></script>
+	<script src="../web/dcpd_js_misc_logs.js"></script>
+	<script src="../web/dcpd_js_container_logs.js"></script>
 </body>
 </html>

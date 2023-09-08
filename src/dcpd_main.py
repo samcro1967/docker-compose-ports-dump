@@ -183,6 +183,10 @@ def dcpd(args):
         # Generate the statistics and write to a file
         dcpd_stats.execute_statistics_generation(cursor, args)
 
+        # Gather services attached to the host network
+        dcpd_hn.host_networking(cursor, args)
+        logger_info.info("Services attached to host networking collected.")
+
         # Process arguments that require extracting and presenting data from the database in various ways.
         if args.debug:
             # Generate an exhaustive debug report covering environment, port mappings, and software details and display to console.
@@ -203,10 +207,6 @@ def dcpd(args):
             # Produce an HTML webpage containing the formatted port data.
             dcpd_output.generate_pretty_web_page(cursor, args)
             logger_info.info("Web page output generated.")
-
-            # Gather services attached to the host network
-            dcpd_hn.host_networking(cursor, args)
-            logger_info.info("Services attached to host networking collected.")
 
             # Collect docker ports
             dcpd_docker.get_container_ports(cursor, args)

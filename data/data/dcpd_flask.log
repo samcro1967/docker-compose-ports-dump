@@ -1,0 +1,5 @@
+[2023-09-08 10:16:54,240] {/app/src/dcpd_api.py:202} INFO - /api/system/current_version called
+[2023-09-08 10:16:54,241] {/app/src/dcpd_api.py:204} INFO - Response: {'code': 200, 'version': 'v1.1.0'}
+[2023-09-08 10:16:54,243] {/app/src/dcpd_api.py:237} INFO - /api/system/latest_version
+[2023-09-08 10:30:08,266] {/app/src/dcpd_api.py:202} INFO - /api/system/current_version called
+[2023-09-08 10:30:08,266] {/app/src/dcpd_api.py:204} INFO - Response: {'code': 200, 'version': 'v1.1.0'}

@@ -11,16 +11,16 @@ Highlights
 New Features
 	1: Added docker inspect to capture running config and added a view of it to the web page.
 	2: Added docker ps to capture running containers and added a view of it to the web page.
-	3: Added docker stats to capture containers utilization metrics for troubleshoting and
+	3: Added docker stats to capture containers utilization metrics for troubleshooting  and
 	   added a view of it to the web page.
 
 Improvements
-	1: Grouped tasks in bootstrap.sh and reorered so the web page is built before caddy starts.
+	1: Grouped tasks in bootstrap.sh and reordered  so the web page is built before caddy starts.
 	2: Changed API port as to not require elevated privileges
 	3: Separated Java functions and eventlisteners into separate files based on functionality 
-	   for better long term management
-	4: Made API port user configureable
-	5: Added Trivy and Codeql security vulnerability scanning to build pipeline and remeadited
+	   for better long-term management
+	4: Made API port user configurable
+	5: Added Trivy and Codeql security vulnerability scanning to build pipeline and remediated
 	6: Scanned code with pylint and updated code accordingly
 	7: Leveraged cProfile and snakeviz to reduce execution time by over 50%
 

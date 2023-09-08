@@ -1,5 +1,28 @@
 /* dcpd_styles.css */
 
+@keyframes fadeInOut {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .5;
+    }
+}
+
+.blinking {
+    animation: fadeInOut 10s linear infinite;
+}
+
+#container-logs-content pre {
+    text-align: left;
+    white-space: pre-wrap;  /* this will allow word-wrapping */
+}
+
+#misc-log-area {
+    text-align: left;
+    white-space: pre-line;  /* This ensures the text wraps and is displayed neatly */
+}
+
 #docker-stats-area table {
     margin-top: 20px;
 	width: 100%;

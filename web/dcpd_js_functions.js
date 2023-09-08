@@ -93,11 +93,9 @@ function populateTable(data) {
  * Fetches and applies background and text color styles from ../data/dcpd_html.json.
  */
 function loadWebpageStyles() {
-	console.log("loadWebpageStyles is called");
     fetch(DATA_PATH + 'dcpd_html.json')
         .then(response => response.json())
         .then(data => {
-            console.log("Fetched data:", data);
 			// Assign values from the JSON to CSS Custom Properties
             document.documentElement.style.setProperty('--dynamic-background-color', data.background_color);
             document.documentElement.style.setProperty('--dynamic-accent-color', data.accent_color);
@@ -105,21 +103,13 @@ function loadWebpageStyles() {
             document.documentElement.style.setProperty('--dynamic-font-name', data.font_name);
             document.documentElement.style.setProperty('--dynamic-font-link', data.font_link);
             document.documentElement.style.setProperty('--dynamic-font-size', data.font_size);
-            
-            // Log font-related data to the console
-            console.log('Font Name:', data.font_name);
-            console.log('Font Link:', data.font_link);
-            console.log('Font Size:', data.font_size);
 
             // Append the font link after styles have been set:
             var dynamicFontLink = getComputedStyle(document.documentElement).getPropertyValue('--dynamic-font-link').trim();
-			console.log("Dynamic Font Link:", dynamicFontLink);
             if (dynamicFontLink && dynamicFontLink !== "--dynamic-font-link") {
-                console.log("Appending font link to head");
 				var linkElement = document.createElement("link");
                 linkElement.setAttribute("rel", "stylesheet");
                 linkElement.setAttribute("href", dynamicFontLink);
-				console.log(linkElement);
                 
                 document.head.appendChild(linkElement);
             } else {
@@ -152,6 +142,8 @@ function showContent(contentId) {
     $('#debug-info-content').hide();
     $('#config-file-content').hide();
     $('#stats-file-content').hide();
+    $('#misc-log-content').hide();
+    $('#container-logs-content').hide();
     $('#readme-content').hide();
     $('#api-docs-content').hide();
 

@@ -58,6 +58,7 @@ cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 24 ; echo
 
 ### **Docker Compose**
 ```
+services:
   dcpd:
     hostname: dcpd
     image: ghcr.io/samcro1967/docker_compose_ports_dump:latest

@@ -13,8 +13,7 @@
 </ul>
 <h1>
 <a id="summary" href="#summary"></a><strong>Summary</strong></h1>
-<p>This script parses a docker-compose.yml file(s) and dumps all assigned ports into a table and displays them in a terminal.  It defaults to sort by the order services are defined in docker-compose.yml.  It also has options to sort by external ports or by container names.  If you have containers that are attached to a VPN container, you can also have those mapped as well.</p>
-<p>It can also generate a web page.  The web page must be run from a web server and viewed via http ot https as it includes JavaScript.  The web page also contains view of all services mapped to host networking as well as the info and debug logs.</p>
+<p>This script parses a docker-compose.yml file(s) and dumps all assigned ports into a table and displays them in either the terminal or in a web page.  It defaults to sort by the order services are defined in docker-compose.yml.  It also has options to sort by external ports or by container names.  If you have containers that are attached to a VPN container, you can also have those mapped as well.</p>
 <p>The script does not change the existing file and only needs read access to your docker-compose.yml file.</p>
 <p>This was developed on Ubuntu 22.04 running Python 3.10.6.  Use at your own risk.  This comes with no warranty or guarantees.</p>
 <h1>
@@ -23,7 +22,7 @@
 <ul>
 <li>Collect and display the following either in the terminal or on a web page
 <ul>
-<li>All external and internal port definitons for services in docker-compose.yml</li>
+<li>All external and internal port definitions for services in docker-compose.yml</li>
 <li>Ports mapped to a VPN container</li>
 </ul>
 </li>
@@ -31,9 +30,10 @@
 <ul>
 <li>Containers attached to host networking</li>
 <li>info and debug logs</li>
+<li>docker inspect, ps, and stats info</li>
 <li>dcpd debug information</li>
 <li>dcpd configuration file</li>
-<li>Stastics page</li>
+<li>dcpd statistics page</li>
 </ul>
 </li>
 <li>Export of all data from the web page</li>
@@ -56,7 +56,8 @@
 </code></pre>
 <h3>Accepted values for DEFAULT_WEB_PAGE variables can be found in dcpd_config_example.py</h3>
 <h3><strong>Docker Compose</strong></h3>
-<pre><code>  dcpd:
+<pre><code>services:
+  dcpd:
     hostname: dcpd
     image: ghcr.io/samcro1967/docker_compose_ports_dump:latest
     container_name: dcpd
@@ -72,7 +73,7 @@
       - API_PORT=51763 # Optional, To override the default
       - BASIC_AUTH_USER=your_user_name
       - BASIC_AUTH_PASS=your_user_password
-	  - DEFAULT_WEB_PAGE_BACKGROUND_COLOR=scarlet #Optional
+      - DEFAULT_WEB_PAGE_BACKGROUND_COLOR=scarlet #Optional
       - DEFAULT_WEB_PAGE_ACCENT_COLOR=gray #Optional
       - DEFAULT_WEB_PAGE_TEXT_COLOR=white #Optional
       - DEFAULT_WEB_PAGE_FONT_NAME=roboto #Optional

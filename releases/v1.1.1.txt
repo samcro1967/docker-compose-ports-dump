@@ -1,0 +1,30 @@
+Release Notes - docker-compose-ports-dump
+
+Version: 1.1.1
+Release Date: September 8th, 2023
+
+Highlights
+	1: Misc. Logs
+	2: Container Logs
+
+New Features
+	1: Made all logs available for viewing from the web page (caddy, flask, gunicorn, & bootstrap)
+	2: Make container logs available from the webpage via an new API endpoint with restrictive CORS
+
+Improvements
+	1: Fixed gunicorn logging so statup and shutdown messages go to dcpg_gunicorn.log.
+
+Bug Fixes
+	1. Fixed host mappings being displayed in cli and web by moving call to collect them earlier
+       in the main script.
+
+Breaking Changes
+	1. None for this release
+
+Deprecated Features (if any)
+	1. None for this release
+
+Known Issues
+	1. Global search and column filters - Searching external and internal port for 80 will
+       return 80 and 7801 as expected.  However, it will also return 8405.
+	2. Does not work behind a proxy

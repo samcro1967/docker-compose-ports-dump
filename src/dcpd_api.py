@@ -19,6 +19,7 @@ The API is built using Flask and uses Flask-Caching for caching responses.
 """
 
 import json
+import docker
 import os
 import sys
 import logging
@@ -27,8 +28,9 @@ import sqlite3
 import subprocess
 
 from flask import Flask, jsonify, request
-from flasgger import Swagger
+from flasgger import Swagger, swag_from
 from flask_caching import Cache
+from flask_cors import CORS
 import requests
 
 # Add config to the sys path
@@ -46,6 +48,7 @@ cache_type = dcpd_config.CACHE_TYPE
 api_port = dcpd_config.API_PORT
 
 dcpd_api = Flask(__name__)
+CORS(dcpd_api, resources={r"/api/*": {"origins": "http://192.168.1.104:8081"}})
 
 # Setting up Flask logger to write to a specific file:
 logger = logging.getLogger(__name__)
@@ -168,6 +171,8 @@ def health_check():
     """
     Health Check Endpoint
     ---
+    tags:
+      - System
     responses:
       200:
         description: Returns health status
@@ -194,6 +199,8 @@ def get_current_version():
     """
     Current Version Endpoint
     ---
+    tags:
+      - System
     responses:
       200:
         description: Returns version
@@ -227,6 +234,8 @@ def get_latest_version():
     """
     Latest Version Endpoint
     ---
+    tags:
+      - System
     responses:
       200:
         description: Returns the latest GitHub version
@@ -260,6 +269,8 @@ def proxy_version_endpoint(endpoint):
     """
     Version Proxy Endpoint
     ---
+    tags:
+      - Proxy
     parameters:
       - name: endpoint
         in: path
@@ -269,7 +280,6 @@ def proxy_version_endpoint(endpoint):
     responses:
       200:
         description: Proxy returns the data from the desired endpoint
-    hidden: true
     """
 
     if endpoint not in ALLOWED_VERSION_ENDPOINTS:
@@ -296,6 +306,8 @@ def proxy_database_endpoint(endpoint, table_name):
     """
     Database Proxy Endpoint
     ---
+    tags:
+      - Proxy
     parameters:
       - name: endpoint
         in: path
@@ -367,6 +379,8 @@ def get_data_from_db(table_name):
     """
     Fetch Data from SQLite Endpoint
     ---
+    tags:
+      - Data
     parameters:
       - name: table_name
         in: path
@@ -425,6 +439,76 @@ def fetch_and_save_openapi_spec(url, output_file):
     # Save the pretty-printed JSON to the output file
     with open(output_file, 'w', encoding='utf-8') as out_file:
         out_file.write(pretty_spec)
+
+# -------------------------------------------------------------------------
+def get_docker_logs():
+    """
+    Fetches the logs of the current container, as determined by the environment variable 'MY_CONTAINER_NAME'.
+    
+    Raises:
+        ValueError: If the container name is not available in the environment variables.
+
+    Returns:
+        str: The logs of the container.
+    """
+    container_name = os.environ.get("DCPD_CONTAINER_NAME")
+    if not container_name:
+        raise ValueError("Container name not available in environment variables!")
+    
+    client = docker.from_env()
+    container = client.containers.get(container_name)
+    return container.logs().decode('utf-8')
+
+@dcpd_api.route('/api/logs', methods=['GET'])
+def get_logs():
+    """
+    API endpoint to retrieve the logs of the current container.
+    ---
+    tags:
+      - Logs
+    responses:
+      200:
+        description: A JSON response containing the logs of the container.
+        schema:
+          type: object
+          properties:
+            logs:
+              type: string
+              description: Logs of the container.
+      500:
+        description: Internal server error
+    """
+    logs = get_docker_logs()
+    return jsonify(logs=logs)
+
+@dcpd_api.route('/api/proxy/logs', methods=['GET'])
+def get_proxy_logs():
+    """
+    API endpoint to retrieve the logs of the current container without requiring an API key.
+    ---
+    tags:
+      - Proxy
+    responses:
+      200:
+        description: A JSON response containing the logs of the container.
+        schema:
+          type: object
+          properties:
+            logs:
+              type: string
+              description: Logs of the container.
+      500:
+        description: Internal server error
+    """
+    try:
+        logs = get_docker_logs()
+        return jsonify(logs=logs), 200
+    except ValueError as e:
+        return jsonify(error=str(e)), 500
+    except Exception as e:  # Catch all other exceptions
+        # Assuming you have some kind of logging set up
+        logger.error("Error fetching Docker logs: %s", e)
+        return jsonify(error="Internal server error"), 500
 
 # -------------------------------------------------------------------------
 if __name__ == '__main__':

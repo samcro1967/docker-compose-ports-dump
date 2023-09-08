@@ -161,7 +161,7 @@ if [ -z "$API_PORT" ]; then
     echo "API_PORT environment variable is not set or empty. Skipping replacement."
 else
     # Use sed to replace the value in dcpd_js_apidocs.js
-    sed -i "s/:51763'/:$API_PORT'/g" /app/web/dcpd_js_apidocs.js
+    sed -i "s/:51763'/:$API_PORT'/g" /app/web/dcpd_js_constants.js
 
     if [ $? -eq 0 ]; then
         echo "API_PORT updated successfully"
@@ -263,6 +263,11 @@ echo "aliases sourced for all users"
 # -------------------------------------------------------------------------
 #*** Start Gunicorn server in the background ***#
 
+touch /app/data/dcpd_gunicorn_access.log
+touch /app/data/dcpd_gunicorn_error.log
+chown 1000:1000 /app/data/*.log
+chmod 777 /app/data/*.log
+
 cd /app/src
 echo "Starting Gunicorn..."
 nohup gunicorn dcpd_api:dcpd_api \
@@ -270,6 +275,7 @@ nohup gunicorn dcpd_api:dcpd_api \
     --workers 4 \
     --access-logfile '/app/data/dcpd_gunicorn_access.log' \
     --error-logfile '/app/data/dcpd_gunicorn_error.log' \
+	--log-file '/app/data/dcpd_gunicorn.log' \
     > /app/data/dcpd_gunicorn.log 2>&1 &
 echo "Gunicorn started with PID $!"
 

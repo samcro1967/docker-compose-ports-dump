@@ -1,0 +1,51 @@
+_____________________________________________________
+     _                _
+  __| | ___ _ __   __| |
+ / _` |/ __| '_ \ / _` |
+| (_| | (__| |_) | (_| |
+ \__,_|\___| .__/ \__,_|
+           |_|
+https://github.com/samcro1967/docker_ports_dump.py
+_____________________________________________________
+
+Renamed /app/dcpd_config_example.py to /app/config/dcpd_config.py
+DOCKER_COMPOSE_FILE_PATHS: /compose-files/docker-compose.yml
+FORMATTED_PATHS:     "/compose-files/docker-compose.yml", 
+Updated dcpd_config.py with value(s) from DEFAULT_DOCKER_COMPOSE_FILE
+DEFAULT_VPN_CONTAINER_NAME: wireguard-pia
+Updated DEFAULT_VPN_CONTAINER_NAME in dcpd_config.py
+API_KEY updated successfully
+API_PORT updated in dcpd_config.py to 51763
+Updated DEFAULT_WEB_PAGE_BACKGROUND_COLOR in dcpd_config.py to scarlet
+Updated DEFAULT_WEB_PAGE_ACCENT_COLOR in dcpd_config.py to gray
+Updated DEFAULT_WEB_PAGE_TEXT_COLOR in dcpd_config.py to white
+Updated DEFAULT_WEB_PAGE_FONT_NAME in dcpd_config.py to roboto
+Updated DEFAULT_WEB_PAGE_FONT_SIZE in dcpd_config.py to medium
+API_PORT updated successfully
+Updated REDACTED_ZIP_FILE_PASSWORD in dcpd_config.py
+/etc/caddy directory created
+Caddyfile moved from root to /etc/caddy/
+/app/data/dcpd_caddy.log created and ownership and permissions set
+Ownership and permissions set on /app
+alias arrary created
+caddy_reload=caddy reload --config /etc/caddy/Caddyfile
+caddy_log=tail /app/data/caddy.log -n 25
+caddy_fmt=caddy fmt --overwrite /etc/caddy/Caddyfile
+aliases created
+aliases sourced for all users
+Starting Gunicorn...
+Gunicorn started with PID 71
+Initial run of dcpd_main.py to generate data files and web page completed
+started caddy in the background
+/etc/cron.d directory created
+/app/data/dcpd_cron.log created and ownership and permissions set
+Wrote CRON_SCHEDULE to crontab
+started cron
+{"level":"info","ts":1694186217.933927,"msg":"using provided configuration","config_file":"/etc/caddy/Caddyfile","config_adapter":"caddyfile"}
+{"level":"info","ts":1694186217.9354706,"logger":"admin","msg":"admin endpoint started","address":"localhost:2019","enforce_origin":false,"origins":["//localhost:2019","//[::1]:2019","//127.0.0.1:2019"]}
+{"level":"info","ts":1694186217.9357235,"logger":"tls.cache.maintenance","msg":"started background certificate maintenance","cache":"0xc000480f00"}
+{"level":"info","ts":1694186217.936153,"logger":"http.log","msg":"server running","name":"srv0","protocols":["h1","h2","h3"]}
+{"level":"info","ts":1694186217.9363077,"logger":"tls","msg":"cleaning storage unit","description":"FileStorage:/root/.local/share/caddy"}
+{"level":"info","ts":1694186217.9363408,"logger":"tls","msg":"finished cleaning storage units"}
+{"level":"info","ts":1694186217.9364011,"msg":"autosaved config (load with --resume flag)","file":"/root/.config/caddy/autosave.json"}
+{"level":"info","ts":1694186217.9364283,"msg":"serving initial configuration"}
