@@ -208,11 +208,11 @@ def dcpd(args):
             dcpd_output.generate_pretty_web_page(cursor, args)
             logger_info.info("Web page output generated.")
 
-            # Collect docker ports
+            # Generate dcpd_docker_inspect.csv
             dcpd_docker.get_container_ports(cursor, args)
             dcpd_docker.get_container_mappings(cursor, args)
 
-            # Generate dcpd_container_info.csv
+            # Generate dcpd_docker_ps.csv
             dcpd_docker.export_container_info_to_csv(args)
 
             # Generate dcpd_container_stats.csv

@@ -394,15 +394,17 @@ def generate_output_json(args) -> None:
     Notes:
     - Handles logging of various events and outputs to the console based on verbosity.
     """
-
     entry_msg = "Starting: generate_output_json"
     logger_info.info(entry_msg)
     if args.verbose:
         print(entry_msg)
 
+    temperature_F = "N/A"
+    temperature_C = "N/A"
+
     try:
         # Load cached data
-        logger_debug.debug("Loading cached data...")
+        logger_debug.debug("Loading cached data from cache file.")
         cached_data = load_cached_data(args)
 
         if is_cache_valid(cached_data, args):
@@ -419,16 +421,33 @@ def generate_output_json(args) -> None:
 
         # Extract latitude and longitude
         latitude, longitude = location_data['loc'].split(',')
-        logger_debug.debug("Latitude: %s, Longitude: %s", latitude, longitude)
-
-        # Fetch weather information for the location
-        weather_response = requests.get(f'https://wttr.in/{latitude},{longitude}?format=%t', timeout=5)
-        temperature_F = weather_response.text.strip()
-        temperature_C = get_temperature_in_celsius(temperature_F, args)  # Convert F to C
+        logger_info.info("Latitude: %s, Longitude: %s", latitude, longitude)
+        if args.verbose:
+            print(f"Latitude: {latitude}, Longitude: {longitude}")
 
     except requests.exceptions.Timeout:
-        logger_info.error("Timeout encountered while fetching weather data.")
-        temperature_F, temperature_C = "N/A", "N/A"
+        logger_info.error("Timeout encountered while fetching location data.")
+
+    try:
+        # Fetch weather information for the location
+        weather_url = f'https://wttr.in/{latitude},{longitude}?format=%t'
+        
+        logger_info.info("Fetching weather data from: %s", weather_url)
+        if args.verbose:
+            print(f"Fetching weather data from: {weather_url}")
+            
+        weather_response = requests.get(weather_url, timeout=5)
+        temperature_F = weather_response.text.strip()
+        if temperature_F:  # only convert if temperature_F has a valid value
+            temperature_C = get_temperature_in_celsius(temperature_F, args)  # Convert F to C
+            
+        logger_info.info("Fetched weather data: Temperature (F) - %s, Temperature (C) - %s", temperature_F, temperature_C)
+        if args.verbose:
+            print(f"Fetched weather data: Temperature (F) - {temperature_F}, Temperature (C) - {temperature_C}")
+    except Exception as e:
+        logger_info.error("Error fetching weather data: %s", str(e))
+        if args.verbose:
+            print(f"Error fetching weather data: {str(e)}")
 
     # Prepare the data for JSON output
     location = f"{location_data['city']}, {location_data['region']}, {location_data['country']}"

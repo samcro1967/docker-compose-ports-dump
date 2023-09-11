@@ -1,7 +1,0 @@
-[2023-09-08 10:16:52 -0500] [71] [INFO] Starting gunicorn 21.2.0
-[2023-09-08 10:16:52 -0500] [71] [INFO] Listening at: http://0.0.0.0:51763 (71)
-[2023-09-08 10:16:52 -0500] [71] [INFO] Using worker: sync
-[2023-09-08 10:16:52 -0500] [73] [INFO] Booting worker with pid: 73
-[2023-09-08 10:16:52 -0500] [74] [INFO] Booting worker with pid: 74
-[2023-09-08 10:16:52 -0500] [75] [INFO] Booting worker with pid: 75
-[2023-09-08 10:16:52 -0500] [76] [INFO] Booting worker with pid: 76

@@ -49,7 +49,7 @@ import dcpd_log_info
 # Create an alias for convenience
 logger_info = dcpd_log_info.logger
 logger_debug = dcpd_log_debug.logger
-output_csv_file = os.path.join("..", "data", "dcpd_container_ports.csv")
+output_csv_file = os.path.join("..", "data", "dcpd_docker_inspect.csv")
 
 # -------------------------------------------------------------------------
 BATCH_SIZE = 20  # Adjust the batch size based on performance testing
@@ -349,7 +349,7 @@ def export_container_info_to_csv(args):
     Raises:
     - subprocess.CalledProcessError: If there's an error executing the Docker commands.
     """
-    csv_filename = os.path.join("..", "data", "dcpd_container_info.csv")
+    csv_filename = os.path.join("..", "data", "dcpd_docker_ps.csv")
 
     entry_msg = f"Starting the export of container info to {csv_filename}."
     logger_info.info(entry_msg)
@@ -389,7 +389,7 @@ def export_container_stats_to_txt(args):
     Raises:
     - subprocess.CalledProcessError: If there's an error executing the Docker commands.
     """
-    txt_filename = os.path.join("..", "data", "dcpd_container_stats.txt")
+    txt_filename = os.path.join("..", "data", "dcpd_docker_stats.txt")
 
     entry_msg = f"Starting the export of container stats to {txt_filename}."
     logger_info.info(entry_msg)

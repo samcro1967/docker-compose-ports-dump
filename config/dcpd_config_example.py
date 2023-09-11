@@ -9,7 +9,7 @@ DEFAULT_DOCKER_COMPOSE_FILE = [
 ]
 
 # Set the version
-VERSION = "v1.1.1"
+VERSION = "v1.2.0"
 
 # Replace with desired file name for the output html file
 DEFAULT_OUTPUT_HTML_FILE_NAME = "dcpd_output.html"

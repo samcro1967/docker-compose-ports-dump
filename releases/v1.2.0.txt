@@ -1,0 +1,28 @@
+Release Notes - docker-compose-ports-dump
+
+Version: 1.2.0
+Release Date: September 13th, 2023
+
+Highlights
+	1: None for this release
+
+New Features
+	1: None for this release
+
+Improvements
+	1: Consolidated links and file viewing/data explorer in the sidenav for a cleaner appearance.
+
+Bug Fixes
+	1. Fixed weather lookup so it happens even if the location cache is valid
+	2. Fixed support files list so zip file is populated again
+
+Breaking Changes
+	1. None for this release
+
+Deprecated Features (if any)
+	1. None for this release
+
+Known Issues
+	1. Global search and column filters - Searching external and internal port for 80 will
+       return 80 and 7801 as expected.  However, it will also return 8405.
+	2. Does not work behind a proxy

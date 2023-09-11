@@ -219,7 +219,24 @@ def create_compressed_files(args):
 
     # List of files to be compressed
     redacted_files = [
-        #... [Your list remains unchanged]
+        '../data/dcpd.csv',
+        '../data/dcpd.db',
+        '../data/dcpd_bootstrap.log',
+        '../data/dcpd_docker_inspect.csv',
+        '../data/dcpd_caddy.log',
+        '../data/dcpd_docker_inspect.csv',
+        '../data/dcpd_docker_ps.cvs',
+        '../data/dcpd_stats.txt',
+        '../data/dcpd_flask.log',
+        '../data/dcpd_gunicorn.log',
+        '../data/dcpd_gunicorn_access.log',
+        '../data/dcpd_gunicorn_error.log',
+        '../data/dcpd_host_networking.csv',
+        '../data/redacted_dcpd_html.json',
+        '../data/dcpd_stats.txt',
+        '../data/redacted_dcpd_debug.txt'
+        '../data/redacted_dcpd_cache_location.json',
+        '../data/redacted_dcpd_html.json'
     ]
 
     try:

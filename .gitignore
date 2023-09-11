@@ -4,5 +4,6 @@ build/*
 src/.pylintrc
 codeql/*
 web/scripts/*
+web/archive/*
 config/dcpd_config.py
 dcpd_notes.txt

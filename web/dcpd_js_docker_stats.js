@@ -9,20 +9,20 @@
 document.getElementById('view-docker-stats').addEventListener('click', function() {
     highlightActiveLink(this);
     showContent('docker-stats-content');
-    loadDockerStats('../data/dcpd_container_stats.txt', 'docker-stats-area');
+    loadDockerStats('../data/dcpd_docker_stats.txt', 'docker-stats-area');
 });
 
 // Add an event listener to the element with ID 'refresh-docker-stats'
 // When clicked, it reloads and displays the Docker stats from the specified file
 document.getElementById('refresh-docker-stats').addEventListener('click', function() {
-    loadDockerStats('../data/dcpd_container_stats.txt', 'docker-stats-area');
+    loadDockerStats('../data/dcpd_docker_stats.txt', 'docker-stats-area');
 	reHighlightLastActiveLink();
 });
 
 // Add an event listener to the element with ID 'exportDockerStats'
 // When clicked, it exports the Docker stats to a file
 document.getElementById('exportDockerStats').addEventListener('click', function() {
-    exportLog('../data/dcpd_container_stats.txt', 'docker-stats-area');
+    exportLog('../data/dcpd_docker_stats.txt', 'docker-stats-area');
 	reHighlightLastActiveLink();
 });
 

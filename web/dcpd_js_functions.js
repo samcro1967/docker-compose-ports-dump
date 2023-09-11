@@ -133,19 +133,11 @@ function loadWebpageStyles() {
 function showContent(contentId) {
     // Hide all predefined content sections
     $('#ports-content').hide();
-    $('#docker-inspect-content').hide();
-    $('#docker-ps-content').hide();
+	$('#data-explorer-content').hide();
     $('#docker-stats-content').hide();
-    $('#host-networking-content').hide();
-    $('#info-log-content').hide();
-    $('#debug-log-content').hide();
-    $('#debug-info-content').hide();
-    $('#config-file-content').hide();
-    $('#stats-file-content').hide();
     $('#misc-log-content').hide();
     $('#container-logs-content').hide();
-    $('#readme-content').hide();
-    $('#api-docs-content').hide();
+    $('#links-content').hide();
 
     // Hide all footer-related elements
     $('#datetime-container').hide();
