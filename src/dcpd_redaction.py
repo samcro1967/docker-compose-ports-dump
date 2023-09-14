@@ -62,28 +62,28 @@ def redact_dcpd_html_location(args):
     if args.verbose:
         print("Starting redaction of location information from dcpd_html.json...")
 
-        try:
-            with open('../data/dcpd_html.json', 'r', encoding='utf-8') as file:
-                data = json.load(file)
-                data['location'] = '[REDACTED]'
-            with open('../data/redacted_dcpd_html.json', 'w', encoding='utf-8') as outfile:
-                json.dump(data, outfile, indent=4)
+    try:
+        with open('../data/dcpd_html.json', 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            data['location'] = '[REDACTED]'
+        with open('../data/redacted_dcpd_html.json', 'w', encoding='utf-8') as outfile:
+            json.dump(data, outfile, indent=4)
 
-            logger_info.info("Successfully redacted location information from dcpd_html.json")
-            if args.verbose:
-                print("Redaction of location information from dcpd_html.json completed.")
+        logger_info.info("Successfully redacted location information from dcpd_html.json")
+        if args.verbose:
+            print("Redaction of location information from dcpd_html.json completed.")
 
-        except (FileNotFoundError, PermissionError, IOError) as file_error:
-            logger_info.error("File operation error during redaction: %s", file_error)
-            logger_debug.exception("File operation error during redaction with detailed traceback")
-            if args.verbose:
-                print(f"File operation error during redaction: {file_error}")
+    except (FileNotFoundError, PermissionError, IOError) as file_error:
+        logger_info.error("File operation error during redaction: %s", file_error)
+        logger_debug.exception("File operation error during redaction with detailed traceback")
+        if args.verbose:
+            print(f"File operation error during redaction: {file_error}")
 
-        except json.JSONDecodeError as json_error:
-            logger_info.error("JSON parsing error during redaction: %s", json_error)
-            logger_debug.exception("JSON parsing error with detailed traceback")
-            if args.verbose:
-                print(f"JSON parsing error during redaction: {json_error}")
+    except json.JSONDecodeError as json_error:
+        logger_info.error("JSON parsing error during redaction: %s", json_error)
+        logger_debug.exception("JSON parsing error with detailed traceback")
+        if args.verbose:
+            print(f"JSON parsing error during redaction: {json_error}")
 
     # Logging the conclusion of the function and, if verbosity is enabled,
     logger_info.info("Exiting redact_dcpd_html_location()")
@@ -113,37 +113,37 @@ def redact_dcpd_cache_location(args):
     if args.verbose:
         print("Starting sensitive data redaction from dcpd_cache_location.json...")
 
-        try:
-            with open('../data/dcpd_cache_location.json', 'r', encoding='utf-8') as file:
-                data = json.load(file)
-                data['ip'] = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', '[REDACTED]', data['ip'])
-                sensitive_fields = ['hostname', 'city', 'region', 'country', 'loc', 'org', 'postal', 'timezone']
-                for field in sensitive_fields:
-                    data[field] = '[REDACTED]'
-            with open('../data/redacted_dcpd_cache_location.json', 'w', encoding='utf-8') as outfile:
-                json.dump(data, outfile, indent=4)
+    try:
+        with open('../data/dcpd_cache_location.json', 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            data['ip'] = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', '[REDACTED]', data['ip'])
+            sensitive_fields = ['hostname', 'city', 'region', 'country', 'loc', 'org', 'postal', 'timezone']
+            for field in sensitive_fields:
+                data[field] = '[REDACTED]'
+        with open('../data/redacted_dcpd_cache_location.json', 'w', encoding='utf-8') as outfile:
+            json.dump(data, outfile, indent=4)
 
-            logger_info.info("Successfully redacted sensitive data from dcpd_cache_location.json")
-            if args.verbose:
-                print("Sensitive data redaction from dcpd_cache_location.json completed.")
+        logger_info.info("Successfully redacted sensitive data from dcpd_cache_location.json")
+        if args.verbose:
+            print("Sensitive data redaction from dcpd_cache_location.json completed.")
 
-        except (FileNotFoundError, PermissionError, IOError) as file_error:
-            logger_info.error("File operation error during redaction: %s", file_error)
-            logger_debug.exception("File operation error during redaction with detailed traceback")
-            if args.verbose:
-                print(f"File operation error during redaction: {file_error}")
+    except (FileNotFoundError, PermissionError, IOError) as file_error:
+        logger_info.error("File operation error during redaction: %s", file_error)
+        logger_debug.exception("File operation error during redaction with detailed traceback")
+        if args.verbose:
+            print(f"File operation error during redaction: {file_error}")
 
-        except json.JSONDecodeError as json_error:
-            logger_info.error("JSON parsing error during redaction: %s", json_error)
-            logger_debug.exception("JSON parsing error with detailed traceback")
-            if args.verbose:
-                print(f"JSON parsing error during redaction: {json_error}")
+    except json.JSONDecodeError as json_error:
+        logger_info.error("JSON parsing error during redaction: %s", json_error)
+        logger_debug.exception("JSON parsing error with detailed traceback")
+        if args.verbose:
+            print(f"JSON parsing error during redaction: {json_error}")
 
-        except re.error as regex_error:
-            logger_info.error("Regex substitution error during redaction: %s", regex_error)
-            logger_debug.exception("Regex substitution error with detailed traceback")
-            if args.verbose:
-                print(f"Regex substitution error during redaction: {regex_error}")
+    except re.error as regex_error:
+        logger_info.error("Regex substitution error during redaction: %s", regex_error)
+        logger_debug.exception("Regex substitution error with detailed traceback")
+        if args.verbose:
+            print(f"Regex substitution error during redaction: {regex_error}")
 
     # Logging the conclusion of the function. If verbosity is enabled,
     # a print statement notifies the user of the end of the redaction process.
@@ -222,19 +222,19 @@ def create_compressed_files(args):
         '../data/dcpd.csv',
         '../data/dcpd.db',
         '../data/dcpd_bootstrap.log',
-        '../data/dcpd_docker_inspect.csv',
         '../data/dcpd_caddy.log',
+        '../data/dcpd_cron.log',
+        '../data/dcpd_debug.txt',
         '../data/dcpd_docker_inspect.csv',
-        '../data/dcpd_docker_ps.cvs',
-        '../data/dcpd_stats.txt',
+        '../data/dcpd_docker_ps.csv',
+        '../data/dcpd_docker_stats.txt',
         '../data/dcpd_flask.log',
         '../data/dcpd_gunicorn.log',
         '../data/dcpd_gunicorn_access.log',
         '../data/dcpd_gunicorn_error.log',
         '../data/dcpd_host_networking.csv',
-        '../data/redacted_dcpd_html.json',
         '../data/dcpd_stats.txt',
-        '../data/redacted_dcpd_debug.txt'
+        '../data/redacted_dcpd_debug.txt',
         '../data/redacted_dcpd_cache_location.json',
         '../data/redacted_dcpd_html.json'
     ]

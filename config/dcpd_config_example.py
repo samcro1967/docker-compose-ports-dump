@@ -9,7 +9,7 @@ DEFAULT_DOCKER_COMPOSE_FILE = [
 ]
 
 # Set the version
-VERSION = "v1.2.0"
+VERSION = "v1.2.1"
 
 # Replace with desired file name for the output html file
 DEFAULT_OUTPUT_HTML_FILE_NAME = "dcpd_output.html"
@@ -162,7 +162,7 @@ TERMINAL_COLOR_RESET = "\033[m"
 DEFAULT_SORT_ORDER = "none"
 
 # Default log file size
-MAX_LOG_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_LOG_SIZE = 1 * 1024 * 1024  # 1 MB
 
 # Default numer of logs to keep
 LOG_RETENTION_COUNT = 5  # Keep the latest 5 log files.
