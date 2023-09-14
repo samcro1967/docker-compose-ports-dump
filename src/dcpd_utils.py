@@ -84,12 +84,12 @@ def set_permissions_and_ownership(args):
         for root, dirs, files in os.walk(parent_dir):
             for dir_name in dirs:
                 dir_path = os.path.join(root, dir_name)
-                os.chmod(dir_path, 0o777)
+                os.chmod(dir_path, 0o755)
                 os.chown(dir_path, 1000, 1000)
 
             for file_name in files:
                 file_path = os.path.join(root, file_name)
-                os.chmod(file_path, 0o777)
+                os.chmod(file_path, 0o755)
                 os.chown(file_path, 1000, 1000)
 
     except OSError as os_error:

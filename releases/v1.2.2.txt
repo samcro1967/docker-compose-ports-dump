@@ -1,0 +1,27 @@
+Release Notes - docker-compose-ports-dump
+
+Version: 1.2.2
+Release Date: October ??th, 2023
+
+Highlights
+	1: None for this release
+
+New Features
+	1: None for this release
+
+Improvements
+	1: Added logrotate and capped log sizes at 1 MB
+
+Bug Fixes
+	1. None for this release
+
+Breaking Changes
+	1. None for this release
+
+Deprecated Features (if any)
+	1. None for this release
+
+Known Issues
+	1. Global search and column filters - Searching external and internal port for 80 will
+       return 80 and 7801 as expected.  However, it will also return 8405.
+	2. Does not work behind a proxy

@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.source https://github.com/samcro1967/docker-compo
 
 # Update & install required packages and set up Docker Compose V2
 RUN apk update && apk upgrade && \
-    apk add --no-cache bash busybox grep lsof nano python3 py3-pip tree jq curl linux-headers docker gcc musl-dev python3-dev && \
+    apk add --no-cache bash busybox grep lsof nano python3 py3-pip tree jq curl linux-headers docker gcc musl-dev python3-dev logrotate && \
     # Setup Docker Compose V2 plugin
     mkdir -p /root/.docker/cli-plugins/ && \
     curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" -o /root/.docker/cli-plugins/docker-compose && \
@@ -23,7 +23,7 @@ ENV PUID=1000 \
     PGID=1000 \
     CRON_SCHEDULE="* * * * *" \
     EDITOR=nano \
-    DOCKER_COMPOSE_FILE_PATHS="/path/to/docker-compose1.yml,/path/to/docker-compose2.yml"\
+    DOCKER_COMPOSE_FILE_PATHS="/path/to/docker-compose1.yml,/path/to/docker-compose2.yml" \
     DEFAULT_VPN_CONTAINER_NAME="your_vpn_container_name" \
     REDACTED_ZIP_FILE_PASSWORD="your_zip_file_password" \
     API_KEY="your_api_key" \
@@ -49,7 +49,8 @@ WORKDIR /app
 COPY . .
 
 # Install pip packages
-RUN pip3 install -U -r /app/requirements.txt
+RUN pip3 install -U -r /app/requirements.txt pip-review && \
+    pip-review --auto
 
 RUN chmod +x /app/bootstrap.sh
 

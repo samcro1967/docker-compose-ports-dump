@@ -4,7 +4,7 @@
   "info": {
     "description": "dcpd API Documentation",
     "title": "dcpd API",
-    "version": "v1.1.1"
+    "version": "v1.2.1"
   },
   "paths": {
     "/api/data/fetch_table/{table_name}": {

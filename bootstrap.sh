@@ -7,9 +7,16 @@
 # Enable debugging mode
 # set -x
 
+# Function to log a message with a timestamp
+log_with_timestamp() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
+}
+
 exec > >(tee -a /app/data/dcpd_bootstrap.log) 2>&1
 
 trap 'echo "Script exited with code: $?"' EXIT
+
+log_with_timestamp "Begin bootstrap.sh."
 
 # ecgo branding to container logs
 cat /app/branding
@@ -219,14 +226,14 @@ fi
 # Create /app/data/dcpd_caddy.log and set ownership and permissions
 touch /app/data/dcpd_caddy.log
 chown 1000:1000 /app/data/dcpd_caddy.log
-chmod 777 /app/data/dcpd_caddy.log
+chmod 755 /app/data/dcpd_caddy.log
 echo "/app/data/dcpd_caddy.log created and ownership and permissions set"
 
 # -------------------------------------------------------------------------
 #*** Setup ownership and permissions on /app ***#
 
 chown -R 1000:1000 /app
-chmod -R 777 /app
+chmod -R 755 /app
 echo "Ownership and permissions set on /app"
 
 # -------------------------------------------------------------------------
@@ -266,7 +273,7 @@ echo "aliases sourced for all users"
 touch /app/data/dcpd_gunicorn_access.log
 touch /app/data/dcpd_gunicorn_error.log
 chown 1000:1000 /app/data/*.log
-chmod 777 /app/data/*.log
+chmod 755 /app/data/*.log
 
 cd /app/src
 echo "Starting Gunicorn..."
@@ -299,13 +306,52 @@ if [ ! -d "/etc/cron.d" ]; then
     echo "/etc/cron.d directory created"
 fi
 
-# Create /app/data/dcpd_cron.log and set ownership and permissions
-touch /app/data/dcpd_cron.log
-chown 1000:1000 /app/data/dcpd_cron.log
-chmod 777 /app/data/dcpd_cron.log
-echo "/app/data/dcpd_cron.log created and ownership and permissions set"
+# Define the file path
+file_path="/app/data/dcpd_cron.log"
 
-# Check if the job already exists in the crontab
+# Check if the file already exists
+if [ ! -e "$file_path" ]; then
+    # Create the file
+    touch "$file_path"
+    
+    # Set ownership and permissions
+    chown 1000:1000 "$file_path"
+    chmod 755 "$file_path"
+    
+    echo "$file_path created, ownership and permissions set"
+else
+    echo "$file_path already exists"
+fi
+
+
+# Define source and destination file paths
+source_file="/app/dcpd_cron_logrotate.conf"
+destination_dir="/etc/logrotate.d/"
+destination_file="${destination_dir}dcpd_cron_logrotate.conf"
+
+# Check if the destination file already exists
+if [ ! -e "$destination_file" ]; then
+    # Copy the logrotate configuration
+    cp -n "$source_file" "$destination_dir"
+    echo "Copied logrotate configuration to $destination_dir"
+else
+    echo "Logrotate configuration already exists in $destination_dir"
+fi
+
+# Add log rotation job to cron if it doesn't exist already
+CRON_JOB="0 * * * * /usr/sbin/logrotate -v /etc/logrotate.d/dcpd_cron_logrotate.conf >> /app/data/dcpd_logrotate.log 2>&1"
+
+# Check if the crontab for the current user can be accessed and if the job exists
+if crontab -l 2>/dev/null | grep -F -q "$CRON_JOB"; then
+    echo "Cron job for logrotate already exists. Skipping addition."
+else
+    # Add the job if it doesn't exist
+    (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
+    echo "Added logrotate cron job"
+    chmod 0644 /etc/logrotate.d/dcpd_cron_logrotate.conf
+fi
+
+# Check if the dcpd_main.py job already exists in the crontab
 if ! crontab -l | grep -q "dcpd_main.py"; then
     # Write the cron schedule to crontab if not already present
     (crontab -l; echo -e "$CRON_SCHEDULE cd /app/src && python3 -B ./dcpd_main.py -o >> /app/data/dcpd_cron.log 2>&1\n$CRON_SCHEDULE sh -c \"echo ' \$(date)'\" >> /app/data/dcpd_cron.log 2>&1") | crontab -

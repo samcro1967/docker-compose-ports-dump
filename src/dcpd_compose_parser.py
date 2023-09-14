@@ -434,16 +434,44 @@ def extract_service_port_details(service_name, service_data, args):
 
     if "ports" in service_data:
         for port in service_data["ports"]:
-            host_port, container_port = port.split(":")
-            external_port = int(host_port)
-            internal_port = int(container_port.split("/")[0])
+            if isinstance(port, str):
+                # Check if the port is in "host_port:container_port" format
+                if ":" in port:
+                    host_port, container_port = port.split(":")
+                    external_port = int(host_port)
+                    internal_port = int(container_port.split("/")[0])
+                else:
+                    # If only container port is provided as a string
+                    external_port = None
+                    internal_port = int(port.split("/")[0])
 
-            port_info = f"Port data found for service {service_name} - External: {external_port}, Internal: {internal_port}"
-            if args.verbose:
-                print(port_info)
-            logger_debug.info(port_info)
+                port_info = f"Port data found for service {service_name} - External: {external_port}, Internal: {internal_port}"
+                if args.verbose:
+                    print(port_info)
+                logger_debug.info(port_info)
 
-            port_details.append((service_name, external_port, internal_port, "N/A"))
+                port_details.append((service_name, external_port, internal_port, "N/A"))
+
+            elif isinstance(port, int):
+                # If the port is provided as an integer, it's the container port
+                external_port = None
+                internal_port = port
+
+                port_info = f"Port data found for service {service_name} - External: {external_port}, Internal: {internal_port}"
+                if args.verbose:
+                    print(port_info)
+                logger_debug.info(port_info)
+
+                port_details.append((service_name, external_port, internal_port, "N/A"))
+
+            else:
+                # Handle unexpected types
+                warn_msg = f"Unexpected port format for service {service_name}: {port}"
+                if args.verbose:
+                    print(warn_msg)
+                logger_debug.warning(warn_msg)
+                # Optionally raise an error if this should not happen
+                # raise ValueError(f"Unexpected port format for service {service_name}: {port}")
 
     elif port_mappings_for_service:
         for port_mapping in port_mappings_for_service:

@@ -180,12 +180,12 @@ def dcpd(args):
         debug_info, port_mapping_str, ports_data_str, environment_data_lines = dcpd_debug.generate_debug_info(cursor)
         dcpd_debug.print_debug_output(debug_info, port_mapping_str, ports_data_str, environment_data_lines, paginate=True, display=False)
 
-        # Generate the statistics and write to a file
-        dcpd_stats.execute_statistics_generation(cursor, args)
-
         # Gather services attached to the host network
         dcpd_hn.host_networking(cursor, args)
         logger_info.info("Services attached to host networking collected.")
+
+        # Generate the statistics and write to a file
+        dcpd_stats.execute_statistics_generation(cursor, args)
 
         # Process arguments that require extracting and presenting data from the database in various ways.
         if args.debug:
