@@ -66,12 +66,12 @@ jobs:
         fi
 
     # Push Docker Image to Docker Hub
-    - name: Push Docker Image to Docker Hub
-      run: |
-        docker push osuhickeys/docker-compose-ports-dump:latest
-        if [[ "${{ env.version }}" != "" ]]; then
-          docker push osuhickeys/docker-compose-ports-dump:${{ env.version }}
-        fi
+    #- name: Push Docker Image to Docker Hub
+      #run: |
+        #docker push osuhickeys/docker-compose-ports-dump:latest
+        #if [[ "${{ env.version }}" != "" ]]; then
+          #docker push osuhickeys/docker-compose-ports-dump:${{ env.version }}
+        #fi
 
     - name: Delete Old Untagged Versions
       uses: Chizkiyahu/delete-untagged-ghcr-action@v2
